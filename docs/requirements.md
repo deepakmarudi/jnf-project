@@ -2,12 +2,13 @@ Users:
 - Recruiter
 - Admin
 
-Features:
-- Recruiter can submit JNF
-- Admin can approve/reject
+Core Features:
+- Recruiter submits JNF
+- Admin reviews and approves/rejects
 
 Pages:
 - Login
 - Dashboard
 - Create JNF
+- My JNFs
 - Admin Panel
