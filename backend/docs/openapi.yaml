@@ -1,0 +1,438 @@
+openapi: 3.0.3
+info:
+  title: JNF Portal Backend API
+  version: 0.1.0
+  description: >
+    Backend API outline for the JNF Portal. This file is an implementation guide
+    for the backend team and should be expanded into a full OpenAPI contract
+    during development.
+
+servers:
+  - url: http://127.0.0.1:8000/api
+
+tags:
+  - name: Health
+  - name: Recruiter Auth
+  - name: Admin Auth
+  - name: Dashboard
+  - name: Company
+  - name: Recruiter
+  - name: JNF Core
+  - name: JNF Contacts
+  - name: JNF Skills
+  - name: JNF Eligibility
+  - name: JNF Salary
+  - name: JNF Rounds
+  - name: JNF Declaration
+  - name: JNF Documents
+  - name: Admin Review
+  - name: Portal
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check endpoint
+      responses:
+        "200":
+          description: Backend is reachable
+
+  /portal/stats:
+    get:
+      tags: [Portal]
+      summary: Get landing-page stats
+      responses:
+        "200":
+          description: Stats returned
+
+  /portal/quick-links:
+    get:
+      tags: [Portal]
+      summary: Get portal quick links
+      parameters:
+        - name: link_type
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Quick links returned
+
+  /auth/send-otp:
+    post:
+      tags: [Recruiter Auth]
+      summary: Send recruiter OTP
+      responses:
+        "200":
+          description: OTP sent
+
+  /auth/verify-otp:
+    post:
+      tags: [Recruiter Auth]
+      summary: Verify recruiter OTP
+      responses:
+        "200":
+          description: OTP verified
+
+  /auth/register:
+    post:
+      tags: [Recruiter Auth]
+      summary: Register recruiter and company
+      responses:
+        "201":
+          description: Registration complete
+
+  /auth/login:
+    post:
+      tags: [Recruiter Auth]
+      summary: Recruiter login
+      responses:
+        "200":
+          description: Login success
+
+  /auth/me:
+    get:
+      tags: [Recruiter Auth]
+      summary: Get authenticated recruiter
+      responses:
+        "200":
+          description: Recruiter returned
+
+  /auth/logout:
+    post:
+      tags: [Recruiter Auth]
+      summary: Recruiter logout
+      responses:
+        "200":
+          description: Logout success
+
+  /admin/auth/login:
+    post:
+      tags: [Admin Auth]
+      summary: Admin login
+      responses:
+        "200":
+          description: Login success
+
+  /admin/auth/me:
+    get:
+      tags: [Admin Auth]
+      summary: Get authenticated admin
+      responses:
+        "200":
+          description: Admin returned
+
+  /admin/auth/logout:
+    post:
+      tags: [Admin Auth]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logout success
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Recruiter dashboard summary
+      responses:
+        "200":
+          description: Dashboard returned
+
+  /companies/me:
+    get:
+      tags: [Company]
+      summary: Get current company profile
+      responses:
+        "200":
+          description: Company returned
+    put:
+      tags: [Company]
+      summary: Update current company profile
+      responses:
+        "200":
+          description: Company updated
+
+  /recruiters/me:
+    get:
+      tags: [Recruiter]
+      summary: Get recruiter profile
+      responses:
+        "200":
+          description: Recruiter returned
+    put:
+      tags: [Recruiter]
+      summary: Update recruiter profile
+      responses:
+        "200":
+          description: Recruiter updated
+
+  /jnfs:
+    get:
+      tags: [JNF Core]
+      summary: List recruiter JNFs
+      responses:
+        "200":
+          description: JNFs returned
+    post:
+      tags: [JNF Core]
+      summary: Create draft JNF
+      responses:
+        "201":
+          description: Draft created
+
+  /jnfs/{jnf}:
+    get:
+      tags: [JNF Core]
+      summary: Get one JNF
+      parameters:
+        - name: jnf
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: JNF returned
+    put:
+      tags: [JNF Core]
+      summary: Update one JNF
+      parameters:
+        - name: jnf
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: JNF updated
+    delete:
+      tags: [JNF Core]
+      summary: Delete one JNF
+      parameters:
+        - name: jnf
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: JNF deleted
+
+  /jnfs/{jnf}/preview:
+    post:
+      tags: [JNF Core]
+      summary: Build preview payload for one JNF
+      parameters:
+        - name: jnf
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Preview returned
+
+  /jnfs/{jnf}/submit:
+    post:
+      tags: [JNF Core]
+      summary: Submit one JNF
+      parameters:
+        - name: jnf
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: JNF submitted
+
+  /jnfs/{jnf}/contacts:
+    get:
+      tags: [JNF Contacts]
+      summary: Get JNF contacts
+      responses:
+        "200":
+          description: Contacts returned
+    post:
+      tags: [JNF Contacts]
+      summary: Add JNF contact
+      responses:
+        "201":
+          description: Contact created
+
+  /jnfs/{jnf}/skills:
+    get:
+      tags: [JNF Skills]
+      summary: Get selected JNF skills
+      responses:
+        "200":
+          description: Skills returned
+    put:
+      tags: [JNF Skills]
+      summary: Replace selected JNF skills
+      responses:
+        "200":
+          description: Skills updated
+
+  /skills:
+    get:
+      tags: [JNF Skills]
+      summary: Get skill master list
+      responses:
+        "200":
+          description: Skill list returned
+
+  /jnfs/{jnf}/eligibility:
+    get:
+      tags: [JNF Eligibility]
+      summary: Get JNF eligibility data
+      responses:
+        "200":
+          description: Eligibility returned
+    put:
+      tags: [JNF Eligibility]
+      summary: Update JNF eligibility data
+      responses:
+        "200":
+          description: Eligibility updated
+
+  /jnfs/{jnf}/salary:
+    get:
+      tags: [JNF Salary]
+      summary: Get JNF salary data
+      responses:
+        "200":
+          description: Salary returned
+    put:
+      tags: [JNF Salary]
+      summary: Update JNF salary data
+      responses:
+        "200":
+          description: Salary updated
+
+  /jnfs/{jnf}/rounds:
+    get:
+      tags: [JNF Rounds]
+      summary: Get JNF round rows
+      responses:
+        "200":
+          description: Rounds returned
+    post:
+      tags: [JNF Rounds]
+      summary: Add round row
+      responses:
+        "201":
+          description: Round created
+
+  /jnfs/{jnf}/declaration:
+    get:
+      tags: [JNF Declaration]
+      summary: Get JNF declaration
+      responses:
+        "200":
+          description: Declaration returned
+    put:
+      tags: [JNF Declaration]
+      summary: Update JNF declaration
+      responses:
+        "200":
+          description: Declaration updated
+
+  /jnfs/{jnf}/documents:
+    get:
+      tags: [JNF Documents]
+      summary: Get JNF documents
+      responses:
+        "200":
+          description: Documents returned
+    post:
+      tags: [JNF Documents]
+      summary: Upload document
+      responses:
+        "201":
+          description: Document created
+
+  /admin/dashboard:
+    get:
+      tags: [Admin Review]
+      summary: Get admin dashboard
+      responses:
+        "200":
+          description: Dashboard returned
+
+  /admin/jnfs:
+    get:
+      tags: [Admin Review]
+      summary: List JNFs for admin review
+      responses:
+        "200":
+          description: JNFs returned
+
+  /admin/jnfs/{jnf}:
+    get:
+      tags: [Admin Review]
+      summary: Get one JNF for admin review
+      parameters:
+        - name: jnf
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: JNF review detail returned
+
+  /admin/jnfs/{jnf}/start-review:
+    post:
+      tags: [Admin Review]
+      summary: Move JNF to under_review
+      responses:
+        "200":
+          description: Review started
+
+  /admin/jnfs/{jnf}/request-changes:
+    post:
+      tags: [Admin Review]
+      summary: Move JNF to changes_requested
+      responses:
+        "200":
+          description: Changes requested
+
+  /admin/jnfs/{jnf}/approve:
+    post:
+      tags: [Admin Review]
+      summary: Approve JNF
+      responses:
+        "200":
+          description: JNF approved
+
+  /admin/jnfs/{jnf}/close:
+    post:
+      tags: [Admin Review]
+      summary: Close JNF
+      responses:
+        "200":
+          description: JNF closed
+
+  /admin/recruiters:
+    get:
+      tags: [Admin Review]
+      summary: List recruiters
+      responses:
+        "200":
+          description: Recruiters returned
+
+  /admin/recruiters/{recruiter}/status:
+    patch:
+      tags: [Admin Review]
+      summary: Update recruiter status
+      parameters:
+        - name: recruiter
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Recruiter status updated
