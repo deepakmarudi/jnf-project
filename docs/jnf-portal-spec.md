@@ -1,141 +1,297 @@
-# JNF Portal Specification
+# JNF Portal Project Specification
 
-## Objective
+## 1. Project Overview
 
-Build a recruiter-facing Job Notification Form portal for campus placements using Next.js on the frontend and Laravel on the backend, based on the IIT (ISM) Dhanbad JNF portal proposal deck.
+The JNF Portal is a web-based system for IIT (ISM) Dhanbad that digitizes recruiter onboarding, company profile collection, Job Notification Form submission, and admin review.
 
-## Primary users
+This specification is based on the approved database design PDF and the `IIT_ISM_JNF v2.0.pptx` presentation. Together, they define the product scope, workflow, and data model for the first implementation of the portal.
 
-- Recruiter
-- Career Development Centre admin
-- Placement team reviewer
+## 2. Project Objectives
 
-## Product goals
+- Replace manual or scattered JNF collection with a structured portal.
+- Give recruiters a guided, professional submission workflow.
+- Give the CDC/admin team a clean review and tracking process.
+- Capture data in a reporting-friendly relational format.
+- Support future analytics, exports, and dashboard features.
 
-- Digitize the full JNF flow from recruiter onboarding to final submission.
-- Keep the form structured enough for reporting and flexible enough for different salary and selection models.
-- Reduce incomplete submissions with progressive onboarding, draft saving, and preview before submit.
+## 3. User Roles
 
-## Screens mapped from the PPT
+### Recruiter
 
-### 01 Landing Page
+- Registers using company email
+- Verifies email through OTP
+- Creates and maintains company profile
+- Creates, edits, previews, and submits JNFs
+- Tracks JNF status from dashboard
 
-- Public portal entry
-- Institute branding, recruiter value proposition, stats, and quick links
-- Clear entry points for registration and login
+### Admin
 
-### 02 Login and Registration
+- Logs in through a separate admin flow
+- Reviews submitted JNFs
+- Requests changes, approves, or closes records
+- Manages recruiter account status
+- Maintains portal content such as stats and quick links
 
-- Recruiter authentication
+## 4. Product Modules
+
+### Public Portal
+
+- Landing page
+- Institute branding and recruiter value proposition
+- Placement statistics
+- Quick links such as brochure, policies, past recruiters, and manuals
+
+### Recruiter Onboarding
+
 - Three-step registration flow
-- Email OTP placeholder in the UI layer
-- Company profile onboarding before first JNF
+- Email OTP verification
+- Recruiter details capture
+- Company profile setup
 
-### 03 Company Profile
+### Recruiter Workspace
 
-- Core organization details
-- Company metadata needed for CDC and reporting
-- Industry tags and social profile support
+- Recruiter dashboard
+- Company profile management
+- JNF list and status tracking
+- New JNF creation
+- Draft editing
+- Preview before submission
 
-### 04 Contact and HR Details
+### Admin Workspace
+
+- Admin dashboard
+- Review queue
+- Recruiter management
+- Company and JNF detail views
+- Audit trail visibility
+
+## 5. Functional Design
+
+### 5.1 Landing Page
+
+- Public-facing portal entry
+- Clear `Register` and `Recruiter Login` actions
+- Placement statistics cards
+- Institute highlights and recruiter value proposition
+- Quick link section for brochure, policies, contact, and manuals
+
+### 5.2 Registration and Login
+
+- Step 1: email verification with OTP
+- Step 2: recruiter details
+- Step 3: company profile
+- Separate admin login
+- Optional reCAPTCHA on public auth endpoints
+
+### 5.3 Company Profile
+
+- Company identity, sector, and address
+- Logo upload
+- Category or organization type
+- Date of establishment
+- Annual turnover
+- Social media or LinkedIn URL
+- Nature of business and description
+- Industry tag selection
+- MNC indicator with HQ country and city
+
+### 5.4 Contact and HR Details
 
 - Head HR
 - Primary point of contact
 - Secondary point of contact
+- Landline support per contact
+- Character counters for long text inputs in the UI
 
-### 05 Job Profile
+### 5.5 Job Profile
 
-- Profile name and designation
-- Place of posting and work mode
-- Expected and minimum hires
-- Joining month, JD summary, required skills, bond, onboarding notes
+- Job title and formal designation
+- Place of posting
+- Work location mode
+- Expected hires and minimum hires
+- Tentative joining month
+- Skills tag input
+- Rich-text job description
+- JD PDF upload
+- Additional job information
+- Bond details
+- Registration link
+- Onboarding procedure
 
-### 06 Eligibility and Courses
+### 5.6 Eligibility and Courses
 
-- Min CGPA
+- Minimum CGPA
 - Backlog policy
-- High school criterion
+- High-school percentage criterion
 - Gender filter
-- Programme and discipline selection
-- PhD and special programme toggles
+- Specific SLP requirement
+- Programme-level eligibility
+- Discipline-level eligibility
+- PhD allowed flag and department requirement
+- MA/DHSS allowed flag
 
-### 07 Salary Details
+### 5.7 Salary Details
 
-- Salary matrix by programme
+- Programme-wise salary packages
+- Same structure for all programmes or different structure per programme
 - Currency selector
-- Additional compensation breakup
-- Bond, deductions, ESOP, and first-year CTC details
+- Base, gross, take-home, first-year CTC
+- ESOP and stock details
+- Bond amount and duration
+- Deductions and free-text breakup
+- Additional salary components
 
-### 08 Selection Process
+### 5.8 Selection Process
 
-- PPT, resume shortlisting, tests, GD, interviews
-- Mode per stage
-- Test duration
-- Interview duration
-- Infra requirements
-- Medical and psychometric toggles
+- Pre-placement talk
+- Resume shortlisting
+- Online or written tests
+- Group discussion
+- Technical or personal interviews
+- Psychometric or medical test toggles
+- Stage-wise mode, duration, and infrastructure needs
 
-### 09 Declaration and Submit
+### 5.9 Declaration and Submission
 
-- Policy acceptance
-- Signatory metadata
-- Preview before final submission
+- Policy acceptance checkboxes
+- Authorized signatory details
+- Typed signature
+- Preview before final submit
+- Inline policy and recruiter guideline links
+- Email confirmation after successful submission
 
-## Recommended architecture
+## 6. Workflow Design
 
-## Frontend
+### Recruiter Workflow
 
-- Next.js App Router
-- MUI theme system
-- NextAuth.js credentials provider
-- API integration against Laravel JSON endpoints
+1. Register with email OTP verification.
+2. Complete recruiter and company profile.
+3. Log in and reach recruiter dashboard.
+4. Create a new JNF and save draft data section by section.
+5. Preview the full form.
+6. Submit the JNF.
+7. Track status updates and respond if changes are requested.
 
-## Backend
+### Admin Workflow
 
-- Laravel 12 REST API
-- Sanctum token authentication for recruiter sessions
-- MySQL or MariaDB persistence
-- JSON section storage for flexible JNF payloads
+1. Log in to admin portal.
+2. View submitted JNFs in review queue.
+3. Open full JNF detail page.
+4. Start review and add remarks.
+5. Request changes, approve, or close the JNF.
+6. Review recruiter and company information when needed.
 
-## Data model summary
+## 7. Status Model
 
-### Recruiter
+### Recruiter Status
 
-- Belongs to a company
-- Logs into the portal
-- Creates and updates JNFs
+- `pending`
+- `active`
+- `blocked`
 
-### Company
+### Admin Status
 
-- Stores organization profile data used across multiple JNFs
+- `active`
+- `inactive`
 
-### JNF
+### JNF Status
 
-- Owns all form sections
-- Draft and submitted status
-- JSON sections for contacts, eligibility, salary details, selection process, and declaration
+- `draft`
+- `submitted`
+- `under_review`
+- `changes_requested`
+- `approved`
+- `closed`
 
-## API surface
+### Recommended Status Flow
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
-- `GET /api/dashboard`
-- `GET /api/jnfs`
-- `POST /api/jnfs`
-- `GET /api/jnfs/{jnf}`
-- `PUT /api/jnfs/{jnf}`
-- `POST /api/jnfs/{jnf}/submit`
+- `draft -> submitted`
+- `submitted -> under_review`
+- `under_review -> changes_requested`
+- `under_review -> approved`
+- `approved -> closed`
+- `changes_requested -> submitted`
 
-## Non-functional requirements
+## 8. Technical Architecture
 
-- Mobile-friendly recruiter experience
-- Draft-first workflow
-- Structured API validation on every section
-- Role-safe access so recruiters can only view their own company data
-- Easy reporting exports for CDC admin workflows
+### Frontend
 
-## Implementation note
+- Next.js application
+- Responsive recruiter and admin interfaces
+- Multi-step and multi-section form UI
+- Autosave and preview support
 
-Because the local environment did not have the frontend or PHP toolchain available, the repository contains a production-oriented scaffold and blueprint rather than a generator-created full runtime. The frontend files are ready to install and run once Node.js is available; the backend files are organized to drop into a Laravel 12 project.
+### Backend
+
+- Laravel REST API
+- Separate recruiter and admin auth flows
+- OTP verification for recruiter onboarding
+- Audit logging for JNF activity
+
+### Database
+
+- MySQL or MariaDB
+- Normalized relational schema
+- Separate tables for company, contacts, eligibility, salary, rounds, declaration, documents, and audit logs
+
+### File Storage
+
+- Company logo
+- JD PDF
+- Brochure and other recruiter uploads
+
+## 9. Data Design Principles
+
+- Use normalized business tables instead of storing JNF sections as large JSON blobs.
+- Keep enum values stable across database, API, and UI.
+- Keep company profile separate from JNF records so multiple JNFs can reuse the same company data.
+- Use child tables for repeatable and matrix-style sections such as contacts, salary, eligibility, and rounds.
+- Track major JNF actions in audit logs.
+
+## 10. Delivery Scope for First Build
+
+### Core Build
+
+- Public landing page
+- Recruiter auth and onboarding
+- Company profile
+- Recruiter dashboard
+- JNF create, edit, preview, submit
+- Admin login and review dashboard
+- Database migrations and seed data for master tables
+
+### Useful Early Enhancements
+
+- Public search by year, company, or discipline
+- Autofill help for returning recruiters
+- User manual page
+- Better reporting exports
+
+## 11. Implementation Phases
+
+### Phase 1
+
+- Project setup
+- Auth flows
+- Company profile
+- Master data migrations and seeders
+
+### Phase 2
+
+- Recruiter dashboard
+- JNF core module
+- Contacts, eligibility, salary, rounds, declaration, and documents
+
+### Phase 3
+
+- Admin review workflow
+- Audit views
+- Portal content management
+- Notification and email confirmation flow
+
+## 12. Project Documentation Set
+
+- `docs/requirements.md` defines the business and functional requirements.
+- `docs/database.md` defines the relational data model and implementation constraints.
+- `docs/api.md` defines the API contract for frontend and backend development.
+- `docs/ui.md` defines pages, flows, and interaction behavior for the UI.

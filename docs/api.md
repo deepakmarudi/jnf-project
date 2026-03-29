@@ -1,29 +1,34 @@
-# API Design
+# API Design Specification
 
-## 1. System Overview
+## 1. Purpose
 
-This API supports the IIT (ISM) JNF Portal with two major actors:
+This document defines the REST API contract for the JNF Portal. It is written for frontend and backend implementation and covers authentication, recruiter workflows, admin workflows, portal content, and the section-wise JNF data model.
 
-- Recruiter
-- Admin
+The API design is based on the approved relational schema and the form behavior described in the `IIT_ISM_JNF v2.0.pptx` presentation.
 
-Logical layers:
+## 2. API Standards
 
-- Frontend portal
-- API layer
-- Database layer
-
-Base path:
+### Base Path
 
 - `/api`
 
-Auth model:
+### Format
 
-- Token-based auth
+- JSON for standard requests and responses
+- `multipart/form-data` for file uploads
+
+### Naming Convention
+
+- Use `snake_case` for request and response fields
+- Use schema-aligned names wherever data maps directly to database columns
+
+### Authentication
+
+- Bearer token authentication
+- Laravel Sanctum token storage
 - Separate recruiter and admin login flows
-- Bearer token in `Authorization` header
 
-Standard response shape:
+### Common Success Response
 
 ```json
 {
@@ -33,7 +38,7 @@ Standard response shape:
 }
 ```
 
-Standard error shape:
+### Common Error Response
 
 ```json
 {
@@ -44,406 +49,529 @@ Standard error shape:
 }
 ```
 
-## 2. Auth Module
-
-### Endpoints
-
-- `POST /api/auth/send-otp`
-- `POST /api/auth/verify-otp`
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/logout`
-
-### Purpose
-
-- Validate recruiter email
-- Create recruiter account
-- Create company during first registration
-- Return current recruiter session
-
-### Main payload fields
-
-- email
-- otp
-- recruiter name
-- designation
-- phone
-- alternate phone
-- password
-- company object
-
-## 3. Company Module
-
-### Endpoints
-
-- `POST /api/companies`
-- `GET /api/companies/:id`
-- `PUT /api/companies/:id`
-- `GET /api/companies`
-
-### Purpose
-
-- Create company record
-- Read company profile
-- Update company profile
-- List companies for admin/reporting
-
-### Main payload fields
-
-- name
-- website
-- postal_address
-- employee_count
-- sector
-- logo_path
-- category_or_org_type
-- date_of_establishment
-- annual_turnover
-- social_media_url
-- hq_country
-- hq_city
-- nature_of_business
-- description
-- is_mnc
+## 3. Security and Session Rules
 
-## 4. Recruiter Module
+- Recruiter registration uses OTP verification.
+- Public registration endpoints may require `recaptcha_token`.
+- Recruiter and admin access tokens are issued separately.
+- Recruiters can only access their own company and company-owned JNFs.
+- Admin users can view review and management endpoints.
 
-### Endpoints
+## 4. Public Portal APIs
 
-- `GET /api/recruiters/me`
-- `PUT /api/recruiters/me`
+### `GET /api/portal/stats`
 
-### Purpose
+Returns the landing-page statistics from `portal_stats`.
 
-- Return recruiter profile
-- Update recruiter profile details
+### `GET /api/portal/quick-links`
 
-### Main payload fields
+Returns quick links from `portal_quick_links`.
 
-- full_name
-- designation
-- mobile_number
-- alternative_mobile
+### Query Parameters
 
-## 5. JNF Core Module
+- `link_type`
+- `is_active`
 
-### Endpoints
+## 5. Recruiter Authentication APIs
 
-- `POST /api/jnfs`
-- `GET /api/jnfs`
-- `GET /api/jnfs/:id`
-- `PUT /api/jnfs/:id`
-- `DELETE /api/jnfs/:id`
-- `POST /api/jnfs/:id/submit`
-- `POST /api/jnfs/:id/preview`
+### `POST /api/auth/send-otp`
 
-### Purpose
+#### Request fields
 
-- Create draft JNF
-- List recruiter JNFs
-- Get one JNF
-- Update JNF
-- Delete draft JNF
-- Submit JNF for admin review
-- Return preview-ready aggregated JNF data
+- `recruiter_email`
+- `recaptcha_token`
 
-### Main payload fields
+### `POST /api/auth/verify-otp`
 
-- jnf_number
-- recruitment_season
-- job_title
-- job_designation
-- place_of_posting
-- work_location_mode
-- expected_hires
-- minimum_hires
-- tentative_joining_month
-- registration_link
-- status
+#### Request fields
 
-## 6. JNF Contacts
+- `recruiter_email`
+- `otp_code`
 
-### Endpoints
+### `POST /api/auth/register`
 
-- `POST /api/jnfs/:id/contacts`
-- `GET /api/jnfs/:id/contacts`
-- `PUT /api/contacts/:id`
-- `DELETE /api/contacts/:id`
+#### Request fields
 
-### Purpose
+- `full_name`
+- `designation`
+- `email`
+- `mobile_number`
+- `alternative_mobile`
+- `password`
+- `confirm_password`
+- `company`
 
-- Add recruiter/HR contact rows to a JNF
-- Read all contacts for a JNF
-- Update a single contact
-- Delete a contact
+#### `company` object
 
-### Main payload fields
+- `name`
+- `website`
+- `postal_address`
+- `employee_count`
+- `sector`
+- `logo_path`
+- `category_or_org_type`
+- `date_of_establishment`
+- `annual_turnover`
+- `social_media_url`
+- `hq_country`
+- `hq_city`
+- `nature_of_business`
+- `description`
+- `is_mnc`
+- `industry_tag_ids`
 
-- contact_type
-- full_name
-- designation
-- email
-- mobile_number
-- landline
-- is_optional
+### `POST /api/auth/login`
 
-## 7. Skills
+#### Request fields
 
-### Endpoints
+- `email`
+- `password`
 
-- `GET /api/skills`
-- `POST /api/jnfs/:id/skills`
-
-### Purpose
+### `GET /api/auth/me`
 
-- Return available skill tags
-- Attach selected skills to a JNF
+Returns authenticated recruiter profile and company summary.
 
-### Main payload fields
+### `POST /api/auth/logout`
 
-- skill_ids
+Invalidates current recruiter token.
 
-## 8. Eligibility
+## 6. Recruiter Dashboard APIs
 
-### Endpoints
+### `GET /api/dashboard`
 
-- `POST /api/jnfs/:id/eligibility`
-- `GET /api/jnfs/:id/eligibility`
-- `PUT /api/jnfs/:id/eligibility`
+Returns recruiter dashboard data.
 
-### Purpose
+### Expected response blocks
 
-- Create eligibility block
-- Read eligibility block
-- Update eligibility block
+- recruiter summary
+- company summary
+- JNF counts by status
+- recent JNFs
 
-### Main payload fields
+## 7. Company APIs
 
-- minimum_cgpa
-- backlogs_allowed
-- max_backlogs
-- high_school_percentage_criterion
-- gender_filter
-- slp_requirement
-- phd_allowed
-- phd_department_requirement
-- ma_dhss_allowed
-- programme rows
-- discipline rows
+### `GET /api/companies/me`
 
-## 9. Salary
+Returns the recruiter's company profile.
 
-### Endpoints
+### `PUT /api/companies/me`
 
-- `POST /api/jnfs/:id/salary`
-- `GET /api/jnfs/:id/salary`
-- `PUT /api/jnfs/:id/salary`
+Updates the recruiter's company profile.
 
-### Purpose
+### Main request fields
 
-- Create salary section
-- Read salary section
-- Update salary section
+- `name`
+- `website`
+- `postal_address`
+- `employee_count`
+- `sector`
+- `logo_path`
+- `category_or_org_type`
+- `date_of_establishment`
+- `annual_turnover`
+- `social_media_url`
+- `hq_country`
+- `hq_city`
+- `nature_of_business`
+- `description`
+- `is_mnc`
+- `industry_tag_ids`
 
-### Main payload fields
+## 8. Recruiter Profile APIs
 
-- programme_id
-- salary_structure_mode
-- currency
-- ctc_annual
-- base_fixed
-- monthly_take_home
-- gross_salary
-- first_year_ctc
-- stocks_options
-- esops_value
-- esops_vest_period
-- bond_amount
-- bond_duration_months
-- deductions_text
-- ctc_breakup_text
-- salary components
+### `GET /api/recruiters/me`
 
-## 10. Selection Process
+Returns recruiter profile fields.
 
-### Endpoints
+### `PUT /api/recruiters/me`
 
-- `POST /api/jnfs/:id/rounds`
-- `GET /api/jnfs/:id/rounds`
-- `PUT /api/rounds/:id`
-- `DELETE /api/rounds/:id`
+Updates recruiter profile fields.
 
-### Purpose
+### Main request fields
 
-- Create round rows
-- Read all rounds
-- Update a round
-- Delete a round
+- `full_name`
+- `designation`
+- `mobile_number`
+- `alternative_mobile`
 
-### Main payload fields
+## 9. JNF Core APIs
 
-- round_category
-- round_order
-- round_name
-- selection_mode
-- interview_mode
-- test_type
-- duration_minutes
-- team_members_required
-- rooms_required
-- other_screening_notes
-- is_pre_offer_mandatory
+### `POST /api/jnfs`
 
-## 11. Documents
+Creates a new draft JNF.
 
-### Endpoints
+### `GET /api/jnfs`
 
-- `POST /api/jnfs/:id/documents`
-- `GET /api/jnfs/:id/documents`
-- `DELETE /api/documents/:id`
+Lists JNFs for the authenticated recruiter's company.
 
-### Purpose
+### Query Parameters
 
-- Upload JNF documents
-- Read JNF documents
-- Delete JNF documents
+- `status`
+- `recruitment_season`
+- `search`
 
-### Main payload fields
+### `GET /api/jnfs/{jnf}`
 
-- document_type
-- file
-- original_name
-- stored_name
-- file_path
-- mime_type
-- file_size
+Returns full aggregated JNF data for edit or view.
 
-## 12. Declaration
+### `PUT /api/jnfs/{jnf}`
 
-### Endpoints
+Updates top-level JNF fields.
 
-- `POST /api/jnfs/:id/declaration`
-- `GET /api/jnfs/:id/declaration`
+### `DELETE /api/jnfs/{jnf}`
 
-### Purpose
+Deletes a JNF only when business rules allow it, typically in `draft`.
 
-- Save final declaration block
-- Read final declaration block
+### `POST /api/jnfs/{jnf}/preview`
 
-### Main payload fields
+Returns a preview-ready aggregated JNF payload.
 
-- aipc_guidelines_accepted
-- shortlisting_timeline_accepted
-- posted_information_verified
-- ranking_media_consent
-- accuracy_terms_accepted
-- rti_nirf_consent
-- authorised_signatory_name
-- authorised_signatory_designation
-- declaration_date
-- typed_signature
-- preview_confirmed
+### `POST /api/jnfs/{jnf}/submit`
 
-## 13. Admin Module
+Marks the JNF as submitted and triggers submission-side actions such as audit log and email confirmation.
 
-### Endpoints
+### Main JNF request fields
 
-- `POST /api/admin/auth/login`
-- `GET /api/admin/auth/me`
-- `POST /api/admin/auth/logout`
-- `GET /api/admin/jnfs`
-- `GET /api/admin/jnfs/:id`
-- `POST /api/admin/jnfs/:id/review`
-- `POST /api/admin/jnfs/:id/approve`
-- `POST /api/admin/jnfs/:id/reject`
-- `GET /api/admin/recruiters`
-- `PATCH /api/admin/recruiters/:id/status`
-- `GET /api/admin/dashboard`
+- `jnf_number`
+- `recruitment_season`
+- `job_title`
+- `job_designation`
+- `place_of_posting`
+- `work_location_mode`
+- `expected_hires`
+- `minimum_hires`
+- `tentative_joining_month`
+- `job_description_html`
+- `additional_job_info`
+- `bond_details`
+- `registration_link`
+- `onboarding_procedure`
+- `jd_pdf_path`
 
-### Purpose
+## 10. JNF Contacts APIs
 
-- Admin login/session
-- Review submitted JNFs
-- Approve or reject JNFs
-- View recruiter list
-- Change recruiter status
-- Dashboard reporting
+### `POST /api/jnfs/{jnf}/contacts`
 
-### Main payload fields
+Creates a contact row.
 
-- status
-- review_notes
-- recruiter status
+### `GET /api/jnfs/{jnf}/contacts`
 
-## 14. Portal Features
+Lists all contact rows for the JNF.
 
-### Endpoints
+### `PUT /api/contacts/{contact}`
 
-- `GET /api/stats`
-- `GET /api/quick-links`
-- `GET /api/policies`
+Updates a contact row.
 
-### Purpose
+### `DELETE /api/contacts/{contact}`
 
-- Landing page stats
-- quick links
-- recruiter/admin policies and manuals
+Deletes a contact row.
 
-## 15. Flow Summary
+### Main request fields
 
-Recruiter flow:
+- `contact_type`
+- `full_name`
+- `designation`
+- `email`
+- `mobile_number`
+- `landline`
+- `is_optional`
 
-- register
-- verify OTP
-- login
-- create company
-- create JNF
-- fill section APIs
-- preview
-- submit
+## 11. JNF Skills APIs
 
-Admin flow:
+### `GET /api/skills`
 
-- login
-- list submitted JNFs
-- view detail
-- review
-- approve or reject
+Returns the skill master list.
 
-## 16. Synchronization Rules
+### `GET /api/jnfs/{jnf}/skills`
 
-The API developer and DB developer must use the exact same names for:
+Returns selected skills for the JNF.
 
-- route paths
-- request field names
-- enum values
-- object keys
-- status values
-- foreign key concepts
+### `PUT /api/jnfs/{jnf}/skills`
 
-Do not rename fields in controller code without updating the database mapping document.
+Replaces the selected skill set.
 
-## 17. API to Database Sync Map
+### Main request fields
 
-| API module | Main tables it depends on |
-| --- | --- |
-| Auth | `recruiters`, `recruiter_otps`, `companies` |
-| Company | `companies`, `company_social_links`, `company_industry_tags` |
-| Recruiter | `recruiters` |
-| JNF Core | `jnfs` |
-| Contacts | `jnf_contacts` |
-| Skills | `skills`, `jnf_skills` |
-| Eligibility | `jnf_eligibility_rules`, `jnf_eligibility_programmes`, `jnf_eligibility_disciplines` |
-| Salary | `jnf_salary_packages`, `jnf_salary_components` |
-| Selection Process | `jnf_selection_rounds` |
-| Documents | `jnf_documents` |
-| Declaration | `jnf_declarations` |
-| Admin Review | `jnfs`, `admins`, `jnf_audit_logs` |
-| Portal Features | `portal_stats`, `portal_quick_links`, `policy_links` |
+- `skill_ids`
 
-## 18. Source of Truth Files
+## 12. JNF Eligibility APIs
 
-- `backend/docs/openapi.yaml`
-- `backend/routes/api.php`
-- `docs/database.md`
+### `GET /api/jnfs/{jnf}/eligibility`
+
+Returns the aggregated eligibility block.
+
+### `PUT /api/jnfs/{jnf}/eligibility`
+
+Upserts the eligibility section.
+
+### Main request fields
+
+- `minimum_cgpa`
+- `backlogs_allowed`
+- `max_backlogs`
+- `high_school_percentage_criterion`
+- `gender_filter`
+- `slp_requirement`
+- `phd_allowed`
+- `phd_department_requirement`
+- `ma_dhss_allowed`
+- `other_specific_requirements`
+- `programme_rows`
+- `discipline_rows`
+
+### `programme_rows[]`
+
+- `programme_id`
+- `is_eligible`
+- `min_cpi_for_programme`
+
+### `discipline_rows[]`
+
+- `programme_id`
+- `discipline_id`
+- `is_eligible`
+- `min_cpi_for_discipline`
+
+## 13. JNF Salary APIs
+
+### `GET /api/jnfs/{jnf}/salary`
+
+Returns salary packages and components.
+
+### `PUT /api/jnfs/{jnf}/salary`
+
+Upserts salary data.
+
+### Main request fields
+
+- `salary_packages`
+
+### `salary_packages[]`
+
+- `programme_id`
+- `salary_structure_mode`
+- `currency`
+- `ctc_annual`
+- `base_fixed`
+- `monthly_take_home`
+- `gross_salary`
+- `first_year_ctc`
+- `stocks_options`
+- `esops_value`
+- `esops_vest_period`
+- `bond_amount`
+- `bond_duration_months`
+- `deductions_text`
+- `ctc_breakup_text`
+- `components`
+
+### `components[]`
+
+- `component_type`
+- `component_label`
+- `amount`
+- `currency`
+- `notes`
+
+## 14. JNF Selection Process APIs
+
+### `POST /api/jnfs/{jnf}/rounds`
+
+Creates a round row.
+
+### `GET /api/jnfs/{jnf}/rounds`
+
+Lists all round rows in order.
+
+### `PUT /api/rounds/{round}`
+
+Updates a round row.
+
+### `DELETE /api/rounds/{round}`
+
+Deletes a round row.
+
+### Main request fields
+
+- `round_category`
+- `round_order`
+- `round_name`
+- `selection_mode`
+- `interview_mode`
+- `test_type`
+- `duration_minutes`
+- `team_members_required`
+- `rooms_required`
+- `other_screening_notes`
+- `is_enabled`
+- `is_pre_offer_mandatory`
+
+## 15. JNF Declaration APIs
+
+### `GET /api/jnfs/{jnf}/declaration`
+
+Returns declaration data.
+
+### `PUT /api/jnfs/{jnf}/declaration`
+
+Upserts declaration data.
+
+### Main request fields
+
+- `aipc_guidelines_accepted`
+- `shortlisting_timeline_accepted`
+- `posted_information_verified`
+- `ranking_media_consent`
+- `accuracy_terms_accepted`
+- `rti_nirf_consent`
+- `authorised_signatory_name`
+- `authorised_signatory_designation`
+- `declaration_date`
+- `typed_signature`
+- `preview_confirmed`
+
+## 16. JNF Document APIs
+
+### `POST /api/jnfs/{jnf}/documents`
+
+Uploads a document.
+
+### `GET /api/jnfs/{jnf}/documents`
+
+Lists JNF documents.
+
+### `DELETE /api/documents/{document}`
+
+Deletes a document record.
+
+### Main request fields
+
+- `document_type`
+- `file`
+- `original_name`
+- `stored_name`
+- `file_path`
+- `mime_type`
+- `file_size`
+
+## 17. Admin Authentication APIs
+
+### `POST /api/admin/auth/login`
+
+#### Request fields
+
+- `email`
+- `password`
+
+### `GET /api/admin/auth/me`
+
+Returns authenticated admin profile.
+
+### `POST /api/admin/auth/logout`
+
+Invalidates current admin token.
+
+## 18. Admin Review APIs
+
+### `GET /api/admin/dashboard`
+
+Returns dashboard counts and summary cards.
+
+### `GET /api/admin/jnfs`
+
+Lists JNFs for review.
+
+### Query Parameters
+
+- `status`
+- `company_id`
+- `recruitment_season`
+- `search`
+
+### `GET /api/admin/jnfs/{jnf}`
+
+Returns the full JNF, company, recruiter summary, documents, and audit log.
+
+### `POST /api/admin/jnfs/{jnf}/start-review`
+
+Moves the JNF into `under_review`.
+
+### `POST /api/admin/jnfs/{jnf}/request-changes`
+
+Moves the JNF into `changes_requested`.
+
+### `POST /api/admin/jnfs/{jnf}/approve`
+
+Moves the JNF into `approved`.
+
+### `POST /api/admin/jnfs/{jnf}/close`
+
+Moves the JNF into `closed`.
+
+### Main request fields
+
+- `review_notes`
+- `remarks`
+
+## 19. Admin Recruiter Management APIs
+
+### `GET /api/admin/recruiters`
+
+Lists recruiter accounts with company linkage.
+
+### `PATCH /api/admin/recruiters/{recruiter}/status`
+
+Updates recruiter account status.
+
+### Main request fields
+
+- `status`
+
+## 20. Recommended State Rules
+
+### Recruiter Status
+
+- `pending`
+- `active`
+- `blocked`
+
+### JNF Status
+
+- `draft`
+- `submitted`
+- `under_review`
+- `changes_requested`
+- `approved`
+- `closed`
+
+### Recommended transitions
+
+- `draft -> submitted`
+- `submitted -> under_review`
+- `under_review -> changes_requested`
+- `under_review -> approved`
+- `approved -> closed`
+- `changes_requested -> submitted`
+
+## 21. Aggregated JNF Response Shape
+
+For edit, preview, and admin review screens, the API should aggregate:
+
+- `jnf`
+- `company`
+- `recruiter_summary`
+- `contacts`
+- `skills`
+- `eligibility`
+- `salary`
+- `selection_rounds`
+- `declaration`
+- `documents`
+- `audit_logs`
+
+## 22. Implementation Notes
+
+- Use `portal_quick_links.link_type` for policy and manual links.
+- Do not introduce a separate `policy_links` module in the first release.
+- Keep request field names aligned with database column names when possible.
+- Do not introduce a `rejected` JNF status in the first implementation.
