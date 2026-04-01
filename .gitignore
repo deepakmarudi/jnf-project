@@ -37,3 +37,4 @@ coverage/
 # Testing / temp
 /tmp/
 /temp/
+.codex
