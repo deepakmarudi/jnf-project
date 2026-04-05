@@ -10,11 +10,10 @@ export default function PublicShell({ children }: PublicShellProps) {
     <Box
       sx={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #f4f7fb 0%, #ffffff 45%, #eef3f9 100%)",
+        backgroundColor: "#f5f7fa",
       }}
     >
-      <Container maxWidth="lg" sx={{ py: { xs: 8, md: 12 } }}>
+      <Container maxWidth="lg" sx={{ py: { xs: 4, md: 6 } }}>
         {children}
       </Container>
     </Box>
