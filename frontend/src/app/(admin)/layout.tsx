@@ -5,14 +5,5 @@ type AdminLayoutProps = Readonly<{
 }>;
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "background.default",
-      }}
-    >
-      {children}
-    </Box>
-  );
+  return <Box>{children}</Box>;
 }
