@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import RecruiterShell from "@/components/layout/recruiter-shell";
 
 type RecruiterLayoutProps = Readonly<{
   children: React.ReactNode;
@@ -14,7 +15,7 @@ export default function RecruiterLayout({
         backgroundColor: "background.default",
       }}
     >
-      {children}
+      <RecruiterShell>{children}</RecruiterShell>
     </Box>
   );
 }

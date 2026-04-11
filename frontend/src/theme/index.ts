@@ -6,24 +6,24 @@ const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#163a6b",
-      light: "#2a5a9b",
-      dark: "#0f2747",
+      main: "#7a0b14",
+      light: "#a3222d",
+      dark: "#56060d",
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#0f766e",
-      light: "#2a9d93",
-      dark: "#0a534d",
-      contrastText: "#ffffff",
+      main: "#c5922f",
+      light: "#dbb05a",
+      dark: "#8b6318",
+      contrastText: "#2d1707",
     },
     background: {
-      default: "#f4f7fb",
+      default: "#f7f2ec",
       paper: "#ffffff",
     },
     text: {
-      primary: "#10233d",
-      secondary: "#52637a",
+      primary: "#2f1d17",
+      secondary: "#68554b",
     },
     success: {
       main: "#1f7a4d",
@@ -37,35 +37,33 @@ const theme = createTheme({
     info: {
       main: "#0b6bcb",
     },
-    divider: "#d8e0ea",
+    divider: "#e6d8cb",
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 16,
   },
   typography: {
     fontFamily: [
-      "Inter",
+      "Manrope",
       "Segoe UI",
-      "Roboto",
-      "Helvetica Neue",
       "Arial",
       "sans-serif",
     ].join(","),
     h1: {
-      fontSize: "3rem",
-      fontWeight: 700,
-      lineHeight: 1.15,
+      fontSize: "3.2rem",
+      fontWeight: 800,
+      lineHeight: 1.05,
       letterSpacing: "-0.02em",
     },
     h2: {
-      fontSize: "2.25rem",
-      fontWeight: 700,
+      fontSize: "2.4rem",
+      fontWeight: 800,
       lineHeight: 1.2,
       letterSpacing: "-0.01em",
     },
     h3: {
       fontSize: "1.75rem",
-      fontWeight: 700,
+      fontWeight: 800,
       lineHeight: 1.25,
     },
     h4: {
@@ -101,17 +99,17 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          minHeight: 42,
-          paddingInline: 18,
+          borderRadius: 12,
+          minHeight: 44,
+          paddingInline: 20,
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          border: "1px solid #d8e0ea",
-          boxShadow: "0 10px 30px rgba(16, 35, 61, 0.06)",
+          border: "1px solid #e6d8cb",
+          boxShadow: "0 18px 40px rgba(80, 37, 18, 0.08)",
         },
       },
     },
@@ -132,6 +130,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: "#ffffff",
+          borderRadius: 14,
         },
       },
     },
@@ -139,7 +138,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: "none",
-          borderBottom: "1px solid #d8e0ea",
+          borderBottom: "1px solid #e6d8cb",
         },
       },
     },
