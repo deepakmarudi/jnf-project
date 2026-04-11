@@ -2,19 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Model;
 
-class Recruiter extends Authenticatable
+class Recruiter extends Model
 {
-    use HasApiTokens;
-    use Notifiable;
-
-    protected $guarded = [];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    //
 }

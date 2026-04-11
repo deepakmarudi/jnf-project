@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class Jnf extends Model
 {
-    protected $guarded = [];
+    //
 }

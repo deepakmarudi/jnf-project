@@ -3,9 +3,6 @@ export const routes = {
     home: "/",
     login: "/login",
     register: "/register",
-    recruiterProcedure: "/recruiters/procedure",
-    pastRecruiters: "/recruiters/past",
-    team: "/team",
     adminLogin: "/admin/login",
   },
   recruiter: {
