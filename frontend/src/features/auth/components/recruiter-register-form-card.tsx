@@ -7,65 +7,70 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
-import Checkbox from "@mui/material/Checkbox";
-import FormControlLabel from "@mui/material/FormControlLabel";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { routes } from "@/lib/routes";
-import { recruiterLoginContent } from "../data/recruiter-login-content";
+import { recruiterRegisterContent } from "../data/recruiter-register-content";
 import {
   getRecruiterLandingPath,
-  loginRecruiter,
+  registerRecruiter,
 } from "../lib/mock-auth";
 import {
-  initialRecruiterLoginFormValues,
-  type RecruiterLoginFormErrors,
-  type RecruiterLoginFormValues,
+  initialRecruiterRegisterFormValues,
+  type RecruiterRegisterFormErrors,
+  type RecruiterRegisterFormValues,
 } from "../types";
 import PasswordVisibilityIcon from "./password-visibility-icon";
 
-function validateRecruiterLoginForm(
-  values: RecruiterLoginFormValues
-): RecruiterLoginFormErrors {
-  const errors: RecruiterLoginFormErrors = {};
+function validateRecruiterRegisterForm(
+  values: RecruiterRegisterFormValues
+): RecruiterRegisterFormErrors {
+  const errors: RecruiterRegisterFormErrors = {};
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+  if (!values.name.trim()) {
+    errors.name = "Full name is required.";
+  }
+
   if (!values.email.trim()) {
-    errors.email = "Email address is required.";
+    errors.email = "Official email address is required.";
   } else if (!emailPattern.test(values.email.trim())) {
     errors.email = "Enter a valid email address.";
   }
 
   if (!values.password) {
     errors.password = "Password is required.";
+  } else if (values.password.length < 6) {
+    errors.password = "Password must be at least 6 characters long.";
+  }
+
+  if (!values.confirm_password) {
+    errors.confirm_password = "Please confirm your password.";
+  } else if (values.confirm_password !== values.password) {
+    errors.confirm_password = "Passwords do not match.";
   }
 
   return errors;
 }
 
-export default function RecruiterLoginFormCard() {
+export default function RecruiterRegisterFormCard() {
   const router = useRouter();
 
-  const [form, setForm] = useState<RecruiterLoginFormValues>(
-    initialRecruiterLoginFormValues
+  const [form, setForm] = useState<RecruiterRegisterFormValues>(
+    initialRecruiterRegisterFormValues
   );
-  const [errors, setErrors] = useState<RecruiterLoginFormErrors>({});
+  const [errors, setErrors] = useState<RecruiterRegisterFormErrors>({});
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaRequired, setCaptchaRequired] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const isCaptchaValid =
-    captchaRequired &&
-    captchaValue.trim().toUpperCase() === recruiterLoginContent.captchaCode;
-
-  function handleFieldChange<K extends keyof RecruiterLoginFormValues>(
+  function handleFieldChange<K extends keyof RecruiterRegisterFormValues>(
     field: K,
-    value: RecruiterLoginFormValues[K]
+    value: RecruiterRegisterFormValues[K]
   ) {
     setForm((current) => ({
       ...current,
@@ -80,19 +85,10 @@ export default function RecruiterLoginFormCard() {
     setFormError("");
   }
 
-  function handleCaptchaRequiredChange(required: boolean) {
-    setCaptchaRequired(required);
-    setFormError("");
-
-    if (!required) {
-      setCaptchaValue("");
-    }
-  }
-
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validationErrors = validateRecruiterLoginForm(form);
+    const validationErrors = validateRecruiterRegisterForm(form);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -100,15 +96,11 @@ export default function RecruiterLoginFormCard() {
       return;
     }
 
-    if (!captchaRequired || !isCaptchaValid) {
-      setFormError("Please complete the captcha verification to continue.");
-      return;
-    }
-
     setIsSubmitting(true);
     setFormError("");
 
-    const result = loginRecruiter({
+    const result = registerRecruiter({
+      name: form.name.trim(),
       email: form.email.trim(),
       password: form.password,
     });
@@ -137,13 +129,15 @@ export default function RecruiterLoginFormCard() {
         <Stack
           component="form"
           spacing={2.5}
-          sx={{ width: "100%", maxWidth: 360, mx: "auto" }}
+          sx={{ width: "100%", maxWidth: 380, mx: "auto" }}
           onSubmit={handleSubmit}
         >
           <Stack spacing={1} sx={{ textAlign: "center" }}>
-            <Typography variant="h4">{recruiterLoginContent.formTitle}</Typography>
+            <Typography variant="h4">
+              {recruiterRegisterContent.formTitle}
+            </Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>
-              {recruiterLoginContent.formDescription}
+              {recruiterRegisterContent.formDescription}
             </Typography>
           </Stack>
 
@@ -151,8 +145,22 @@ export default function RecruiterLoginFormCard() {
 
           <Stack spacing={2}>
             <TextField
-              label="Email Address"
+              label="Full Name"
+              required
+              placeholder="Enter recruiter full name"
+              value={form.name}
+              onChange={(event) =>
+                handleFieldChange("name", event.target.value)
+              }
+              error={Boolean(errors.name)}
+              helperText={errors.name}
+              fullWidth
+            />
+
+            <TextField
+              label="Official Email Address"
               type="email"
+              required
               placeholder="name@company.com"
               value={form.email}
               onChange={(event) =>
@@ -166,13 +174,14 @@ export default function RecruiterLoginFormCard() {
             <TextField
               label="Password"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
+              required
+              placeholder="Create a password"
               value={form.password}
               onChange={(event) =>
                 handleFieldChange("password", event.target.value)
               }
               error={Boolean(errors.password)}
-              helperText={errors.password}
+              helperText={errors.password ?? recruiterRegisterContent.passwordHint}
               fullWidth
               InputProps={{
                 endAdornment: (
@@ -188,57 +197,44 @@ export default function RecruiterLoginFormCard() {
                 ),
               }}
             />
-          </Stack>
 
-          <Stack spacing={1}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={captchaRequired}
-                  onChange={(event) =>
-                    handleCaptchaRequiredChange(event.target.checked)
-                  }
-                />
+            <TextField
+              label="Confirm Password"
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              placeholder="Confirm your password"
+              value={form.confirm_password}
+              onChange={(event) =>
+                handleFieldChange("confirm_password", event.target.value)
               }
-              label={recruiterLoginContent.captchaLabel}
-              sx={{ mx: 0, justifyContent: "center" }}
+              error={Boolean(errors.confirm_password)}
+              helperText={errors.confirm_password}
+              fullWidth
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Hide confirm password"
+                          : "Show confirm password"
+                      }
+                      onClick={() =>
+                        setShowConfirmPassword((current) => !current)
+                      }
+                    >
+                      <PasswordVisibilityIcon visible={showConfirmPassword} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
-
-            {captchaRequired ? (
-              <Stack spacing={1.25}>
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1.25,
-                    borderRadius: 2,
-                    border: "1px dashed",
-                    borderColor: "divider",
-                    backgroundColor: "#f8fafc",
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      letterSpacing: "0.28em",
-                      color: "primary.main",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {recruiterLoginContent.captchaCode}
-                  </Typography>
-                </Box>
-
-                <TextField
-                  label={recruiterLoginContent.captchaInputLabel}
-                  placeholder={recruiterLoginContent.captchaInputPlaceholder}
-                  value={captchaValue}
-                  onChange={(event) => setCaptchaValue(event.target.value)}
-                  fullWidth
-                />
-              </Stack>
-            ) : null}
           </Stack>
+
+          <Alert severity="info">
+            {recruiterRegisterContent.postRegistrationNote}
+          </Alert>
 
           <Button
             type="submit"
@@ -247,7 +243,7 @@ export default function RecruiterLoginFormCard() {
             fullWidth
             disabled={isSubmitting}
           >
-            {isSubmitting ? "Signing In..." : "Sign In"}
+            {isSubmitting ? "Creating Account..." : "Create Account"}
           </Button>
 
           <Stack
@@ -256,16 +252,16 @@ export default function RecruiterLoginFormCard() {
             justifyContent="space-between"
             alignItems={{ xs: "flex-start", sm: "center" }}
           >
-            <Button variant="text" sx={{ px: 0 }} disabled>
-              Forgot Password
-            </Button>
+            <Typography variant="body2" sx={{ color: "text.secondary" }}>
+              Already registered?
+            </Typography>
             <Button
               component={Link}
-              href={routes.public.register}
+              href={routes.public.login}
               variant="text"
               sx={{ px: 0 }}
             >
-              New recruiter? Register
+              Sign in to continue
             </Button>
           </Stack>
         </Stack>
