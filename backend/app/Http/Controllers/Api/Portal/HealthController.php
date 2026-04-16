@@ -9,8 +9,9 @@ class HealthController extends Controller
 {
     public function __invoke(): JsonResponse
     {
-        return response()->json([
-            'message' => 'Backend API is healthy.',
+        return $this->api()->success([
+            'healthy' => true,
+            'service' => 'jnf-portal-backend',
         ]);
     }
 }
