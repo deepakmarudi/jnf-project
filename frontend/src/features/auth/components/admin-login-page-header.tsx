@@ -53,15 +53,6 @@ export default function AdminLoginPageHeader() {
         </Box>
         {", IIT (ISM) Dhanbad"}
       </Typography>
-
-      <Button
-        component={Link}
-        href={routes.public.login}
-        variant="text"
-        sx={{ px: 0 }}
-      >
-        Recruiter Login
-      </Button>
     </Stack>
   );
 }

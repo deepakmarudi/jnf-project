@@ -16,23 +16,18 @@ import { routes } from "@/lib/routes";
 import { adminLoginContent } from "../data/admin-login-content";
 import PasswordVisibilityIcon from "./password-visibility-icon";
 
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import Alert from "@mui/material/Alert";
-
 export default function AdminLoginFormCard() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [formError, setFormError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [captchaValue, setCaptchaValue] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const isCaptchaValid =
     !captchaRequired ||
     captchaValue.trim().toUpperCase() === adminLoginContent.captchaCode;
+  const isFormValid =
+    email.trim().length > 0 && password.trim().length > 0 && isCaptchaValid;
 
   const handleCaptchaRequiredChange = (required: boolean) => {
     setCaptchaRequired(required);
@@ -41,42 +36,6 @@ export default function AdminLoginFormCard() {
       setCaptchaValue("");
     }
   };
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!email.trim() || !password) {
-      setFormError("Please enter your email and password.");
-      return;
-    }
-
-    if (!isCaptchaValid) {
-      setFormError("Please complete the captcha verification to continue.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setFormError("");
-
-    try {
-      const response = await signIn("credentials", {
-        redirect: false,
-        email: email.trim(),
-        password,
-        role: "admin",
-      });
-
-      if (response?.error) {
-        setFormError(response.error);
-      } else if (response?.ok) {
-        router.replace(routes.admin.dashboard);
-      }
-    } catch {
-      setFormError("Unable to sign in right now.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
 
   return (
     <Card sx={{ borderRadius: 4 }}>
@@ -105,16 +64,12 @@ export default function AdminLoginFormCard() {
               label="Email Address"
               type="email"
               placeholder="admin@ism.ac.in"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
               fullWidth
             />
             <TextField
               label="Password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               fullWidth
               InputProps={{
                 endAdornment: (
@@ -183,11 +138,12 @@ export default function AdminLoginFormCard() {
           </Stack>
 
           <Button
-            type="submit"
+            component={Link}
+            href={routes.admin.dashboard}
             variant="contained"
             size="medium"
             fullWidth
-            disabled={!isCaptchaValid || isSubmitting}
+            disabled={!isCaptchaValid}
           >
             {isSubmitting ? "Signing In..." : "Sign In"}
           </Button>
@@ -195,8 +151,8 @@ export default function AdminLoginFormCard() {
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
+            justifyContent="center"
+            alignItems="center"
           >
             <Button variant="text" sx={{ px: 0 }}>
               Forgot Password
