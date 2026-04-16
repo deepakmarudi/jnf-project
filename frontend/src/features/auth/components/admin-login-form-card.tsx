@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -16,14 +16,21 @@ import { routes } from "@/lib/routes";
 import { adminLoginContent } from "../data/admin-login-content";
 import PasswordVisibilityIcon from "./password-visibility-icon";
 
+const ADMIN_SESSION_KEY = "admin-authenticated";
+
 export default function AdminLoginFormCard() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [captchaValue, setCaptchaValue] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const isCaptchaValid =
     !captchaRequired ||
     captchaValue.trim().toUpperCase() === adminLoginContent.captchaCode;
+  const isFormValid =
+    email.trim().length > 0 && password.trim().length > 0 && isCaptchaValid;
 
   const handleCaptchaRequiredChange = (required: boolean) => {
     setCaptchaRequired(required);
@@ -31,6 +38,15 @@ export default function AdminLoginFormCard() {
     if (!required) {
       setCaptchaValue("");
     }
+  };
+
+  const handleSignIn = () => {
+    if (!isFormValid) {
+      return;
+    }
+
+    window.localStorage.setItem(ADMIN_SESSION_KEY, "true");
+    router.push(routes.admin.dashboard);
   };
 
   return (
@@ -58,12 +74,16 @@ export default function AdminLoginFormCard() {
               label="Email Address"
               type="email"
               placeholder="admin@ism.ac.in"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
               fullWidth
             />
             <TextField
               label="Password"
               type={showPassword ? "text" : "password"}
               placeholder="Enter your password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
               fullWidth
               InputProps={{
                 endAdornment: (
@@ -132,12 +152,11 @@ export default function AdminLoginFormCard() {
           </Stack>
 
           <Button
-            component={Link}
-            href={routes.admin.dashboard}
             variant="contained"
             size="medium"
             fullWidth
-            disabled={!isCaptchaValid}
+            disabled={!isFormValid}
+            onClick={handleSignIn}
           >
             Sign In
           </Button>
@@ -145,8 +164,8 @@ export default function AdminLoginFormCard() {
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
+            justifyContent="center"
+            alignItems="center"
           >
             <Button variant="text" sx={{ px: 0 }}>
               Forgot Password
