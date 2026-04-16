@@ -11,16 +11,13 @@ import ErrorState from "@/components/ui/error-state";
 import LoadingState from "@/components/ui/loading-state";
 import SectionCard from "@/components/ui/section-card";
 import StatusChip from "@/components/ui/status-chip";
-import { getRecruiterSession } from "@/features/auth/lib/mock-auth";
-import { getCompanyProfileForRecruiter } from "@/features/company/lib/company-storage";
+import useRecruiterSession from "@/features/auth/hooks/use-recruiter-session";
+import { getMyCompanyProfile } from "@/features/company/lib/company-api";
 import type { CompanyProfile } from "@/features/company/types";
 import { routes } from "@/lib/routes";
 import JnfPreviewAcknowledgement from "./components/jnf-preview-acknowledgement";
-import {
-  getStoredJnfById,
-  setJnfFlashMessage,
-  upsertStoredJnf,
-} from "./lib/jnf-storage";
+import { fetchJnfFullRecord } from "./lib/jnf-orchestrator";
+import { submitJnf } from "./lib/jnf-api";
 import { getJnfMissingRequiredFields } from "./lib/jnf-validation";
 import type { JnfRecord } from "./types";
 import {
@@ -187,6 +184,7 @@ function PreviewField({
 
 export default function JnfPreviewPage({ id }: JnfPreviewPageProps) {
   const router = useRouter();
+  const { session, isLoading: isSessionLoading } = useRecruiterSession();
 
   const [record, setRecord] = useState<JnfRecord | null>(null);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
@@ -196,30 +194,55 @@ export default function JnfPreviewPage({ id }: JnfPreviewPageProps) {
   const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
-    const storedJnf = getStoredJnfById(id);
-
-    if (!storedJnf) {
-      setPageError("JNF not found.");
-      setIsLoading(false);
+    if (isSessionLoading) {
       return;
     }
 
-    const session = getRecruiterSession();
+    let isMounted = true;
 
-    if (session?.recruiter_id) {
-      setCompanyProfile(getCompanyProfileForRecruiter(session.recruiter_id));
+    async function loadPreviewState() {
+      try {
+        const storedJnf = await fetchJnfFullRecord(id);
+
+        if (!storedJnf) {
+          if (!isMounted) return;
+          setPageError("JNF not found.");
+          setIsLoading(false);
+          return;
+        }
+
+        if (session?.is_logged_in) {
+          try {
+            const profile = await getMyCompanyProfile();
+            if (isMounted) setCompanyProfile(profile);
+          } catch {
+            if (isMounted) setCompanyProfile(null);
+          }
+        }
+
+        if (!isMounted) return;
+        setRecord(storedJnf);
+        setIsLoading(false);
+      } catch {
+        if (!isMounted) return;
+        setPageError("JNF could not be safely loaded from server.");
+        setIsLoading(false);
+      }
     }
 
-    setRecord(storedJnf);
-    setIsLoading(false);
-  }, [id]);
+    loadPreviewState();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isSessionLoading, session]);
 
   const missingRequiredFields = useMemo(
     () => (record ? getJnfMissingRequiredFields(record) : []),
     [record]
   );
 
-  function handleFinalSubmit() {
+  async function handleFinalSubmit() {
     if (!record || !acknowledged) {
       return;
     }
@@ -231,49 +254,15 @@ export default function JnfPreviewPage({ id }: JnfPreviewPageProps) {
       return;
     }
 
-    const now = new Date().toISOString();
-
-    let nextSubmissionCount = record.submission_count;
-    let nextSelfEditUsed = record.self_edit_used;
-
-    if (record.status === "draft" && record.submission_count === 0) {
-      nextSubmissionCount = 1;
-    } else if (record.status === "draft" && record.submission_count >= 1) {
-      nextSubmissionCount = record.submission_count + 1;
-      nextSelfEditUsed = true;
-    } else if (record.status === "changes_requested") {
-      nextSubmissionCount = record.submission_count + 1;
+    try {
+      await submitJnf(record.id);
+      router.push(routes.recruiter.jnfs + "?success=true");
+    } catch {
+      setSubmitError("Failed to submit. Check missing constraints or network connection.");
     }
-
-    const nextRecord: JnfRecord = {
-      ...record,
-      status: "submitted",
-      preview_completed: true,
-      submission_acknowledged: true,
-      self_edit_used: nextSelfEditUsed,
-      submission_count: nextSubmissionCount,
-      admin_feedback:
-        record.status === "changes_requested" ? "" : record.admin_feedback,
-      updated_at: now,
-      submitted_at: now,
-    };
-
-    upsertStoredJnf(nextRecord);
-
-    setJnfFlashMessage({
-      message:
-        record.status === "changes_requested"
-          ? "JNF resubmitted successfully."
-          : nextSubmissionCount === 1
-            ? "JNF submitted successfully."
-            : "JNF resubmitted successfully.",
-      severity: "success",
-    });
-
-    router.push(routes.recruiter.jnfs);
   }
 
-  if (isLoading) {
+  if (isSessionLoading || isLoading) {
     return (
       <PageContainer title="JNF Preview">
         <LoadingState message="Loading preview..." />

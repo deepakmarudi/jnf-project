@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
@@ -12,6 +11,7 @@ type JnfContactsSectionProps = Readonly<{
   form: JnfRecord;
   setForm: React.Dispatch<React.SetStateAction<JnfRecord>>;
   fieldErrors: JnfFieldErrors;
+  embedded?: boolean;
 }>;
 
 const contactMethodOptions = [
@@ -20,49 +20,54 @@ const contactMethodOptions = [
   { value: "either", label: "Either" },
 ] as const;
 
-function createContactRow(role: JnfContact["role"]): JnfContact {
+function createContactRow(role: JnfContact["role"], id: string): JnfContact {
   return {
     ...createEmptyJnfContact(),
-    id: `${role}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id,
     role,
   };
+}
+
+function ensureRequiredContacts(contacts: JnfContact[]) {
+  const recruiterPoc =
+    contacts.find((contact) => contact.role === "primary_poc") ??
+    createContactRow("primary_poc", "primary_poc_contact");
+
+  const hrContact =
+    contacts.find((contact) => contact.role === "head_hr") ??
+    createContactRow("head_hr", "head_hr_contact");
+
+  return [recruiterPoc, hrContact];
 }
 
 export default function JnfContactsSection({
   form,
   setForm,
   fieldErrors,
+  embedded = false,
 }: JnfContactsSectionProps) {
-  useEffect(() => {
-    if (form.contacts.length >= 2) {
-      return;
-    }
-
-    setForm((current) => ({
-      ...current,
-      contacts: [
-        createContactRow("primary_poc"),
-        createContactRow("head_hr"),
-      ],
-    }));
-  }, [form.contacts.length, setForm]);
+  const contacts = ensureRequiredContacts(form.contacts);
 
   function handleUpdateContact(
-    contactId: string,
+    role: "primary_poc" | "head_hr",
     field: keyof JnfContact,
     value: string
   ) {
-    setForm((current) => ({
-      ...current,
-      contacts: current.contacts.map((contact) =>
-        contact.id === contactId
+    setForm((current) => {
+      const nextContacts = ensureRequiredContacts(current.contacts).map((contact) =>
+        contact.role === role
           ? {
               ...contact,
               [field]: value,
             }
           : contact
-      ),
-    }));
+      );
+
+      return {
+        ...current,
+        contacts: nextContacts,
+      };
+    });
   }
 
   function getContactError(
@@ -72,164 +77,132 @@ export default function JnfContactsSection({
     return fieldErrors[`contacts.${role}.${field}`];
   }
 
+  const content = (
+    <Stack spacing={2}>
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        Both contacts are required before final submission.
+      </Typography>
+
+      {contacts.map((contact) => {
+        const isRecruiterPoc = contact.role === "primary_poc";
+        const role = isRecruiterPoc ? "primary_poc" : "head_hr";
+
+        return (
+          <Stack
+            key={contact.id}
+            spacing={2}
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+              {isRecruiterPoc ? "Recruiter (PoC)" : "HR Contact"}
+            </Typography>
+
+            <JnfFormGrid>
+              <TextField
+                label="Full Name"
+                required
+                value={contact.full_name}
+                onChange={(event) =>
+                  handleUpdateContact(role, "full_name", event.target.value)
+                }
+                error={Boolean(getContactError(role, "full_name"))}
+                helperText={getContactError(role, "full_name")}
+                fullWidth
+              />
+
+              <TextField
+                label="Designation"
+                value={contact.designation}
+                onChange={(event) =>
+                  handleUpdateContact(role, "designation", event.target.value)
+                }
+                fullWidth
+              />
+
+              <TextField
+                label="Email"
+                type="email"
+                required
+                value={contact.email}
+                onChange={(event) =>
+                  handleUpdateContact(role, "email", event.target.value)
+                }
+                error={Boolean(getContactError(role, "email"))}
+                helperText={getContactError(role, "email")}
+                fullWidth
+              />
+
+              <TextField
+                label="Phone"
+                required
+                value={contact.phone}
+                onChange={(event) =>
+                  handleUpdateContact(role, "phone", event.target.value)
+                }
+                error={Boolean(getContactError(role, "phone"))}
+                helperText={getContactError(role, "phone")}
+                fullWidth
+              />
+
+              <TextField
+                label="Alternate Phone"
+                value={contact.alternate_phone}
+                onChange={(event) =>
+                  handleUpdateContact(role, "alternate_phone", event.target.value)
+                }
+                fullWidth
+              />
+
+              <TextField
+                select
+                label="Preferred Contact Method"
+                value={contact.preferred_contact_method}
+                onChange={(event) =>
+                  handleUpdateContact(
+                    role,
+                    "preferred_contact_method",
+                    event.target.value
+                  )
+                }
+                fullWidth
+              >
+                {contactMethodOptions.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                label="Remarks"
+                value={contact.remarks}
+                onChange={(event) =>
+                  handleUpdateContact(role, "remarks", event.target.value)
+                }
+                fullWidth
+              />
+            </JnfFormGrid>
+          </Stack>
+        );
+      })}
+    </Stack>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
   return (
     <SectionCard
       title="Contacts"
       description="Fill the 2 required contacts for this JNF: Recruiter (PoC) and HR."
     >
-      <Stack spacing={2}>
-        <Typography variant="body2" sx={{ color: "text.secondary" }}>
-          Both contacts are required before final submission.
-        </Typography>
-
-        {form.contacts.map((contact, index) => {
-          const isRecruiterPoc = contact.role === "primary_poc";
-          const isHrContact = contact.role === "head_hr";
-
-          return (
-            <Stack
-              key={contact.id || index}
-              spacing={2}
-              sx={{
-                p: 2,
-                borderRadius: 2,
-                border: "1px solid",
-                borderColor: "divider",
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                {isRecruiterPoc ? "Recruiter (PoC)" : isHrContact ? "HR Contact" : "Contact"}
-              </Typography>
-
-              <JnfFormGrid>
-                <TextField
-                  label="Full Name"
-                  required
-                  value={contact.full_name}
-                  onChange={(event) =>
-                    handleUpdateContact(contact.id, "full_name", event.target.value)
-                  }
-                  error={Boolean(
-                    isRecruiterPoc
-                      ? getContactError("primary_poc", "full_name")
-                      : isHrContact
-                        ? getContactError("head_hr", "full_name")
-                        : undefined
-                  )}
-                  helperText={
-                    isRecruiterPoc
-                      ? getContactError("primary_poc", "full_name")
-                      : isHrContact
-                        ? getContactError("head_hr", "full_name")
-                        : undefined
-                  }
-                  fullWidth
-                />
-
-                <TextField
-                  label="Designation"
-                  value={contact.designation}
-                  onChange={(event) =>
-                    handleUpdateContact(contact.id, "designation", event.target.value)
-                  }
-                  fullWidth
-                />
-
-                <TextField
-                  label="Email"
-                  type="email"
-                  required
-                  value={contact.email}
-                  onChange={(event) =>
-                    handleUpdateContact(contact.id, "email", event.target.value)
-                  }
-                  error={Boolean(
-                    isRecruiterPoc
-                      ? getContactError("primary_poc", "email")
-                      : isHrContact
-                        ? getContactError("head_hr", "email")
-                        : fieldErrors[`contacts.${index}.email`]
-                  )}
-                  helperText={
-                    isRecruiterPoc
-                      ? getContactError("primary_poc", "email")
-                      : isHrContact
-                        ? getContactError("head_hr", "email")
-                        : fieldErrors[`contacts.${index}.email`]
-                  }
-                  fullWidth
-                />
-
-                <TextField
-                  label="Phone"
-                  required
-                  value={contact.phone}
-                  onChange={(event) =>
-                    handleUpdateContact(contact.id, "phone", event.target.value)
-                  }
-                  error={Boolean(
-                    isRecruiterPoc
-                      ? getContactError("primary_poc", "phone")
-                      : isHrContact
-                        ? getContactError("head_hr", "phone")
-                        : undefined
-                  )}
-                  helperText={
-                    isRecruiterPoc
-                      ? getContactError("primary_poc", "phone")
-                      : isHrContact
-                        ? getContactError("head_hr", "phone")
-                        : undefined
-                  }
-                  fullWidth
-                />
-
-                <TextField
-                  label="Alternate Phone"
-                  value={contact.alternate_phone}
-                  onChange={(event) =>
-                    handleUpdateContact(
-                      contact.id,
-                      "alternate_phone",
-                      event.target.value
-                    )
-                  }
-                  fullWidth
-                />
-
-                <TextField
-                  select
-                  label="Preferred Contact Method"
-                  value={contact.preferred_contact_method}
-                  onChange={(event) =>
-                    handleUpdateContact(
-                      contact.id,
-                      "preferred_contact_method",
-                      event.target.value
-                    )
-                  }
-                  fullWidth
-                >
-                  {contactMethodOptions.map((option) => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <TextField
-                  label="Remarks"
-                  value={contact.remarks}
-                  onChange={(event) =>
-                    handleUpdateContact(contact.id, "remarks", event.target.value)
-                  }
-                  fullWidth
-                />
-              </JnfFormGrid>
-            </Stack>
-          );
-        })}
-      </Stack>
+      {content}
     </SectionCard>
   );
 }

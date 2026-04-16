@@ -1,5 +1,26 @@
 import type { JnfContact, JnfRecord } from "../types";
 
+export type JnfSectionKey =
+  | "company_summary"
+  | "job_profile"
+  | "contacts"
+  | "eligibility"
+  | "salary"
+  | "selection_process"
+  | "declaration";
+
+export const jnfSectionOrder: JnfSectionKey[] = [
+  "company_summary",
+  "job_profile",
+  "contacts",
+  "eligibility",
+  "salary",
+  "selection_process",
+  "declaration",
+];
+
+export type JnfCompletedSections = Record<JnfSectionKey, boolean>;
+
 export type JnfFieldErrors = Partial<Record<string, string>>;
 
 function findContactByRole(

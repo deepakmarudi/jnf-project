@@ -6,33 +6,51 @@ import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import PageContainer from "@/components/layout/page-container";
+import LoadingState from "@/components/ui/loading-state";
 import JnfList from "./components/jnf-list";
 import JnfListFilters from "./components/jnf-list-filters";
-import {
-  consumeJnfFlashMessage,
-  deleteStoredJnf,
-  type JnfFlashMessage,
-  getStoredJnfs,
-} from "./lib/jnf-storage";
+import { deleteJnfCore, listJnfs } from "./lib/jnf-api";
+import { mapBackendJnfCoreToRecord } from "./lib/jnf-mappers";
 import {
   initialJnfListFilters,
   type JnfListFilterValues,
   type JnfRecord,
 } from "./types";
 
+export function getClientFlash() {
+  const params = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  return params.get("success") ? { message: "JNF Updated successfully", severity: "success" as const } : null;
+}
+
 export default function JnfListPage() {
   const [filters, setFilters] = useState<JnfListFilterValues>(initialJnfListFilters);
   const [jnfs, setJnfs] = useState<JnfRecord[]>([]);
-  const [flash, setFlash] = useState<JnfFlashMessage | null>(null);
+  const [flash, setFlash] = useState<{message: string, severity: "success" | "warning" | "error"} | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setJnfs(getStoredJnfs());
-
-    const nextFlash = consumeJnfFlashMessage();
+    const nextFlash = getClientFlash();
 
     if (nextFlash) {
       setFlash(nextFlash);
     }
+
+    async function loadJnfs() {
+      try {
+        const response = await listJnfs();
+        setJnfs(response.data.jnfs.map(mapBackendJnfCoreToRecord));
+      } catch (error) {
+        const apiError = error as { message?: string };
+        setFlash({
+          message: apiError.message ?? "Unable to load JNFs.",
+          severity: "error",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadJnfs();
   }, []);
 
   const seasonOptions = Array.from(
@@ -62,7 +80,7 @@ export default function JnfListPage() {
     setFilters(initialJnfListFilters);
   }
 
-  function handleDeleteDraft(id: string) {
+  async function handleDeleteDraft(id: string) {
     const shouldDelete = window.confirm(
       "Do you want to delete this draft JNF?"
     );
@@ -71,12 +89,20 @@ export default function JnfListPage() {
       return;
     }
 
-    deleteStoredJnf(id);
-    setJnfs(getStoredJnfs());
-    setFlash({
-      message: "Draft deleted successfully.",
-      severity: "success",
-    });
+    try {
+      await deleteJnfCore(id);
+      setJnfs((current) => current.filter((item) => item.id !== id));
+      setFlash({
+        message: "Draft deleted successfully.",
+        severity: "success",
+      });
+    } catch (error) {
+      const apiError = error as { message?: string };
+      setFlash({
+        message: apiError.message ?? "Unable to delete draft.",
+        severity: "error",
+      });
+    }
   }
 
   function handleCloseFlash() {
@@ -107,7 +133,11 @@ export default function JnfListPage() {
           onReset={handleResetFilters}
         />
 
-        <JnfList items={filteredJnfs} onDeleteDraft={handleDeleteDraft} />
+        {isLoading ? (
+          <LoadingState message="Loading JNFs..." />
+        ) : (
+          <JnfList items={filteredJnfs} onDeleteDraft={handleDeleteDraft} />
+        )}
       </Stack>
 
       <Snackbar

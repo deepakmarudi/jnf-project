@@ -9,16 +9,10 @@ import PageContainer from "@/components/layout/page-container";
 import ErrorState from "@/components/ui/error-state";
 import LoadingState from "@/components/ui/loading-state";
 import { routes } from "@/lib/routes";
-import {
-  getRecruiterSession,
-  updateRecruiterCompanyCompletion,
-} from "@/features/auth/lib/mock-auth";
+import useRecruiterSession from "@/features/auth/hooks/use-recruiter-session";
 import CompanyProfileForm from "./components/company-profile-form";
 import CompanyProfileView from "./components/company-profile-view";
-import {
-  getCompanyProfileForRecruiter,
-  upsertCompanyProfileForRecruiter,
-} from "./lib/company-storage";
+import { getMyCompanyProfile, updateMyCompanyProfile } from "./lib/company-api";
 import {
   initialCompanyProfile,
   isCompanyProfileComplete,
@@ -65,6 +59,7 @@ function validateCompanyProfile(
 
 export default function CompanyPage() {
   const router = useRouter();
+  const { session, isLoading: isSessionLoading } = useRecruiterSession();
 
   const [form, setForm] = useState<CompanyProfile>(initialCompanyProfile);
   const [errors, setErrors] = useState<CompanyProfileErrors>({});
@@ -80,44 +75,47 @@ export default function CompanyPage() {
   );
 
   useEffect(() => {
-    const recruiterSession = getRecruiterSession();
+    if (isSessionLoading) {
+      return;
+    }
 
-    if (!recruiterSession?.is_logged_in) {
+    if (!session?.is_logged_in) {
       router.replace(routes.public.login);
       return;
     }
 
-    const savedProfile = getCompanyProfileForRecruiter(
-      recruiterSession.recruiter_id
-    );
+    async function loadCompanyProfile() {
+      setIsLoading(true);
+      setPageError("");
 
-    if (!savedProfile) {
-      setForm(initialCompanyProfile);
-      setHasCompletedProfile(false);
-      setPageMode("edit");
+      try {
+        const profile = await getMyCompanyProfile();
+        const completed = isCompanyProfileComplete(profile);
 
-      if (recruiterSession.company_profile_completed) {
-        updateRecruiterCompanyCompletion(recruiterSession.recruiter_id, false);
+        setForm(profile);
+        setHasCompletedProfile(completed);
+        setPageMode(completed ? "view" : "edit");
+      } catch (error) {
+        const apiError = error as { message?: string };
+
+        if (apiError.message?.toLowerCase().includes("unauth")) {
+          router.replace(routes.public.login);
+          return;
+        }
+
+        setForm(initialCompanyProfile);
+        setHasCompletedProfile(false);
+        setPageMode("edit");
+        setPageError(apiError.message ?? "Unable to load company profile.");
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
-      return;
     }
 
-    const completed = isCompanyProfileComplete(savedProfile);
+    loadCompanyProfile();
+  }, [isSessionLoading, router, session]);
 
-    setForm(savedProfile);
-    setHasCompletedProfile(completed);
-    setPageMode(completed ? "view" : "edit");
-
-    if (completed !== recruiterSession.company_profile_completed) {
-      updateRecruiterCompanyCompletion(recruiterSession.recruiter_id, completed);
-    }
-
-    setIsLoading(false);
-  }, [router]);
-
-  function handleSave() {
+  async function handleSave() {
     const validationErrors = validateCompanyProfile(form);
 
     if (Object.keys(validationErrors).length > 0) {
@@ -128,74 +126,74 @@ export default function CompanyPage() {
       return;
     }
 
-    const recruiterSession = getRecruiterSession();
-
-    if (!recruiterSession?.is_logged_in) {
-      router.replace(routes.public.login);
-      return;
-    }
-
     setIsSaving(true);
-
-    upsertCompanyProfileForRecruiter(recruiterSession.recruiter_id, form);
-    updateRecruiterCompanyCompletion(recruiterSession.recruiter_id, true);
     setErrors({});
 
-    const wasFirstCompletion = !hasCompletedProfile;
+    try {
+      const savedProfile = await updateMyCompanyProfile(form);
+      const completed = isCompanyProfileComplete(savedProfile);
+      const wasFirstCompletion = !hasCompletedProfile;
 
-    setHasCompletedProfile(true);
-    setIsSaving(false);
+      setForm(savedProfile);
+      setHasCompletedProfile(completed);
 
-    if (wasFirstCompletion) {
+      if (wasFirstCompletion && completed) {
+        setSnackbarSeverity("success");
+        setSnackbarMessage(
+          "Company profile saved successfully. Redirecting to dashboard."
+        );
+        setSnackbarOpen(true);
+
+        window.setTimeout(() => {
+          router.replace(routes.recruiter.dashboard);
+        }, 900);
+
+        return;
+      }
+
+      setPageMode("view");
       setSnackbarSeverity("success");
-      setSnackbarMessage(
-        "Company profile saved successfully. Redirecting to dashboard."
-      );
+      setSnackbarMessage("Company profile updated successfully.");
       setSnackbarOpen(true);
+    } catch (error) {
+      const apiError = error as {
+        message?: string;
+        errors?: Record<string, string[]>;
+      };
 
-      window.setTimeout(() => {
-        router.replace(routes.recruiter.dashboard);
-      }, 900);
-
-      return;
+      setSnackbarSeverity("error");
+      setSnackbarMessage(apiError.message ?? "Unable to save company profile.");
+      setSnackbarOpen(true);
+    } finally {
+      setIsSaving(false);
     }
-
-    setPageMode("view");
-    setSnackbarSeverity("success");
-    setSnackbarMessage("Company profile updated successfully.");
-    setSnackbarOpen(true);
   }
 
-  function handleEdit() {
+  async function handleEdit() {
     setErrors({});
     setPageMode("edit");
   }
 
-  function handleCancelEdit() {
-    const recruiterSession = getRecruiterSession();
+  async function handleCancelEdit() {
+    try {
+      const profile = await getMyCompanyProfile();
 
-    if (!recruiterSession?.is_logged_in) {
-      router.replace(routes.public.login);
-      return;
+      setForm(profile);
+      setErrors({});
+      setPageMode("view");
+    } catch (error) {
+      const apiError = error as { message?: string };
+      setSnackbarSeverity("error");
+      setSnackbarMessage(apiError.message ?? "Unable to reload company profile.");
+      setSnackbarOpen(true);
     }
-
-    const savedProfile = getCompanyProfileForRecruiter(
-      recruiterSession.recruiter_id
-    );
-
-    if (savedProfile) {
-      setForm(savedProfile);
-    }
-
-    setErrors({});
-    setPageMode("view");
   }
 
   function handleSnackbarClose() {
     setSnackbarOpen(false);
   }
 
-  if (isLoading) {
+  if (isSessionLoading || isLoading) {
     return (
       <PageContainer title="Company Profile">
         <LoadingState message="Loading company profile..." />

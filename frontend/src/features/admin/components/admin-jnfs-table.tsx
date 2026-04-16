@@ -18,7 +18,9 @@ import EmptyState from "@/components/ui/empty-state";
 import StatusChip from "@/components/ui/status-chip";
 import { routes } from "@/lib/routes";
 import type { JnfStatus } from "@/types/status";
-import { adminJnfRecords } from "../data/admin-jnfs-data";
+import { useEffect } from "react";
+import { listAdminJnfs, type AdminJnfOverview } from "../lib/admin-api";
+import LoadingState from "@/components/ui/loading-state";
 
 type QueueFilterStatus = "all" | "submitted" | "under_review" | "approved" | "rejected";
 type SortOrder = "newest" | "oldest";
@@ -27,6 +29,22 @@ export default function AdminJnfsTable() {
   const [statusFilter, setStatusFilter] = useState<QueueFilterStatus>("submitted");
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+  const [adminJnfRecords, setAdminJnfRecords] = useState<AdminJnfOverview[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchJnfs() {
+      try {
+        const jnfs = await listAdminJnfs();
+        setAdminJnfRecords(jnfs);
+      } catch (error) {
+        console.error("Failed to load admin JNFs: ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchJnfs();
+  }, []);
 
   const filteredJnfs = useMemo(() => {
     const lowerSearch = searchTerm.trim().toLowerCase();
@@ -37,19 +55,23 @@ export default function AdminJnfsTable() {
       const matchesSearch =
         lowerSearch.length === 0
           ? true
-          : jnf.company.toLowerCase().includes(lowerSearch) ||
+          : jnf.companyName.toLowerCase().includes(lowerSearch) ||
             jnf.jobTitle.toLowerCase().includes(lowerSearch);
 
       return matchesStatus && matchesSearch;
     });
 
     return filtered.sort((first, second) => {
-      const firstDate = new Date(first.submittedDate).getTime();
-      const secondDate = new Date(second.submittedDate).getTime();
+      const firstDate = new Date(first.submittedAt).getTime();
+      const secondDate = new Date(second.submittedAt).getTime();
 
       return sortOrder === "newest" ? secondDate - firstDate : firstDate - secondDate;
     });
-  }, [searchTerm, sortOrder, statusFilter]);
+  }, [searchTerm, sortOrder, statusFilter, adminJnfRecords]);
+
+  if (isLoading) {
+    return <LoadingState message="Loading submissions..." />;
+  }
 
   return (
     <Stack spacing={3}>
@@ -127,13 +149,13 @@ export default function AdminJnfsTable() {
                   }}
                 >
                   <TableCell>{jnf.id}</TableCell>
-                  <TableCell>{jnf.company}</TableCell>
-                  <TableCell>{jnf.recruiter}</TableCell>
+                  <TableCell>{jnf.companyName}</TableCell>
+                  <TableCell>{jnf.recruiterName}</TableCell>
                   <TableCell>{jnf.jobTitle}</TableCell>
-                  <TableCell>{jnf.type}</TableCell>
-                  <TableCell>{jnf.submittedDate}</TableCell>
+                  <TableCell>{jnf.roleType}</TableCell>
+                  <TableCell>{new Date(jnf.submittedAt).toLocaleDateString()}</TableCell>
                   <TableCell>
-                    <StatusChip status={normalizeStatusForDisplay(jnf.status)} />
+                    <StatusChip status={normalizeStatusForDisplay(jnf.status as JnfStatus)} />
                   </TableCell>
                   <TableCell align="center">
                     <Button

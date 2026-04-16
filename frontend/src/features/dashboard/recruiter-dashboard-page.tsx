@@ -6,8 +6,9 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import PageContainer from "@/components/layout/page-container";
 import useRecruiterSession from "@/features/auth/hooks/use-recruiter-session";
-import { getCompanyProfileForRecruiter } from "@/features/company/lib/company-storage";
-import { getStoredJnfs } from "@/features/jnf/lib/jnf-storage";
+import { getMyCompanyProfile } from "@/features/company/lib/company-api";
+import { listJnfs } from "@/features/jnf/lib/jnf-api";
+import { mapBackendJnfCoreToRecord } from "@/features/jnf/lib/jnf-mappers";
 import type { JnfRecord } from "@/features/jnf/types";
 import DashboardQuickActions from "./components/dashboard-quick-actions";
 import DashboardReminders from "./components/dashboard-reminders";
@@ -16,16 +17,28 @@ import DashboardSummaryCards from "./components/dashboard-summary-cards";
 
 export default function RecruiterDashboardPage() {
   const [jnfs, setJnfs] = useState<JnfRecord[]>([]);
-  const session = useRecruiterSession();
+  const [companyName, setCompanyName] = useState<string>("Your Company Name");
+  const { session } = useRecruiterSession();
 
   const recruiterName = session?.recruiter_name?.trim() || "Recruiter";
-  const companyName =
-    session?.recruiter_id
-      ? getCompanyProfileForRecruiter(session.recruiter_id)?.name?.trim() || "Your Company Name"
-      : "Your Company Name";
 
   useEffect(() => {
-    setJnfs(getStoredJnfs());
+    async function loadDashboard() {
+      try {
+        const profile = await getMyCompanyProfile();
+        if (profile?.name) {
+          setCompanyName(profile.name.trim());
+        }
+
+        const jnfsReq = await listJnfs();
+        if (jnfsReq.data?.jnfs) {
+          setJnfs(jnfsReq.data.jnfs.map(mapBackendJnfCoreToRecord));
+        }
+      } catch (error) {
+        console.error("Dashboard failed to load fresh data", error);
+      }
+    }
+    loadDashboard();
   }, []);
 
   const sortedJnfs = useMemo(() => {

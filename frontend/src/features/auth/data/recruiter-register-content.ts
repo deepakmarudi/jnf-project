@@ -9,8 +9,8 @@ export const recruiterRegisterContent = {
     "Register first, complete the company profile, and then continue to the recruiter dashboard.",
   formTitle: "Create Recruiter Account",
   formDescription:
-    "Register with your official recruiter details to begin the onboarding process.",
+    "Register with your official recruiter and company details, verify your email OTP, and then sign in to begin onboarding.",
   postRegistrationNote:
-    "After registration, you will be taken to the company profile setup before accessing the dashboard.",
-  passwordHint: "Use at least 6 characters for this mock registration flow.",
+    "After successful registration, sign in with your recruiter account to continue with company onboarding and JNF submission.",
+  passwordHint: "Use at least 8 characters, matching the backend password policy.",
 } as const;

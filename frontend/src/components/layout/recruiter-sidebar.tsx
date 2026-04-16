@@ -1,13 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { clearRecruiterSession } from "@/features/auth/lib/mock-auth";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { logoutRecruiter } from "@/features/auth/lib/auth-api";
+import { clearRecruiterSessionSnapshot } from "@/features/auth/lib/auth-session";
+import { clearAuthToken } from "@/features/auth/lib/auth-token";
 import { routes } from "@/lib/routes";
 
 const navItems = [
@@ -43,10 +46,20 @@ function isNavItemActive(pathname: string, href: string) {
 export default function RecruiterSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  function handleLogout() {
-    clearRecruiterSession();
-    router.replace(routes.public.home);
+  async function handleLogout() {
+    setIsLoggingOut(true);
+
+    try {
+      await logoutRecruiter();
+    } catch {
+      // Clear local auth state even if the logout request fails.
+    } finally {
+      clearAuthToken();
+      clearRecruiterSessionSnapshot();
+      router.replace(routes.public.home);
+    }
   }
 
   return (
@@ -106,6 +119,7 @@ export default function RecruiterSidebar() {
           onClick={handleLogout}
           variant="outlined"
           color="inherit"
+          disabled={isLoggingOut}
           sx={{
             justifyContent: "flex-start",
             fontSize: "1rem",
@@ -115,7 +129,7 @@ export default function RecruiterSidebar() {
             borderRadius: 2,
           }}
         >
-          Logout
+          {isLoggingOut ? "Logging out..." : "Logout"}
         </Button>
       </Stack>
     </Box>

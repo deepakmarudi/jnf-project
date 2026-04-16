@@ -3,25 +3,29 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import PageContainer from "@/components/layout/page-container";
 import ErrorState from "@/components/ui/error-state";
 import LoadingState from "@/components/ui/loading-state";
+import useRecruiterSession from "@/features/auth/hooks/use-recruiter-session";
+import { getMyCompanyProfile } from "@/features/company/lib/company-api";
+import type { CompanyProfile } from "@/features/company/types";
 import { routes } from "@/lib/routes";
-import JnfEditorActions from "./components/jnf-editor-actions";
 import JnfForm from "./components/jnf-form";
-import JnfProgressSummary from "./components/jnf-progress-summary";
-import {
-  createJnfId,
-  getStoredJnfById,
-  setJnfFlashMessage,
-  upsertStoredJnf,
-} from "./lib/jnf-storage";
 import {
   getJnfFieldErrors,
   getJnfMissingRequiredFields,
 } from "./lib/jnf-validation";
-import { getJnfProgressSummary } from "./lib/jnf-section-progress";
+import {
+  getJnfSectionValidity,
+  initialJnfCompletedSections,
+  jnfSectionOrder,
+  type JnfCompletedSections,
+} from "./lib/jnf-section-validation";
+import { fetchJnfFullRecord, saveJnfFullRecord } from "./lib/jnf-orchestrator";
+import { submitJnf } from "./lib/jnf-api";
 import { emptyJnfRecord, type JnfRecord } from "./types";
 
 type JnfEditorPageProps = Readonly<{
@@ -29,26 +33,62 @@ type JnfEditorPageProps = Readonly<{
   id?: string;
 }>;
 
-function buildJnfNumber(id: string) {
-  const year = new Date().getFullYear();
-  const shortId = id.slice(-4);
-  return `JNF-${year}-${shortId}`;
-}
-
 export default function JnfEditorPage({
   mode,
   id,
 }: JnfEditorPageProps) {
   const router = useRouter();
+  const { session, isLoading: isSessionLoading } = useRecruiterSession();
 
   const [form, setForm] = useState<JnfRecord>(emptyJnfRecord);
+  const [completedSections, setCompletedSections] =
+    useState<JnfCompletedSections>(initialJnfCompletedSections);
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [isLoading, setIsLoading] = useState(mode === "edit");
+  const [, setIsSaving] = useState(false);
   const [pageError, setPageError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
 
   useEffect(() => {
+    if (isSessionLoading || !session?.is_logged_in) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadCompanyProfile() {
+      try {
+        const profile = await getMyCompanyProfile();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setCompanyProfile(profile);
+      } catch {
+        if (!isMounted) {
+          return;
+        }
+
+        setCompanyProfile(null);
+      }
+    }
+
+    loadCompanyProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isSessionLoading, session]);
+
+  useEffect(() => {
+    if (isSessionLoading) {
+      return;
+    }
+
     if (mode === "create") {
       setForm(emptyJnfRecord);
+      setCompletedSections(initialJnfCompletedSections);
       setIsLoading(false);
       return;
     }
@@ -59,50 +99,66 @@ export default function JnfEditorPage({
       return;
     }
 
-    const storedJnf = getStoredJnfById(id);
+    let isMounted = true;
 
-    if (!storedJnf) {
-      setPageError("JNF not found.");
-      setIsLoading(false);
-      return;
+    async function loadJnf() {
+      try {
+        const storedJnf = await fetchJnfFullRecord(id as string);
+
+        if (!isMounted) return;
+
+        const canUseSelfEdit =
+          storedJnf.status === "submitted" &&
+          storedJnf.submission_count === 1 &&
+          !storedJnf.self_edit_used;
+
+        const canEditNormally =
+          storedJnf.status === "draft" ||
+          storedJnf.status === "changes_requested";
+
+        if (storedJnf.status === "approved" || storedJnf.status === "rejected") {
+          setPageError("This JNF is read-only. You can preview it, but not edit it.");
+          setIsLoading(false);
+          return;
+        }
+
+        if (canUseSelfEdit) {
+          const nextRecord = {
+            ...storedJnf,
+            status: "draft" as const,
+          };
+
+          setForm(nextRecord);
+          setCompletedSections(getJnfSectionValidity(nextRecord, companyProfile));
+          setInfoMessage(
+            "You are using your one-time self-edit option. After resubmission, self-edit will no longer be available."
+          );
+          setIsLoading(false);
+          return;
+        }
+
+        if (!canEditNormally) {
+          setPageError("This JNF can no longer be edited. You can still preview it.");
+          setIsLoading(false);
+          return;
+        }
+
+        setForm(storedJnf);
+        setCompletedSections(getJnfSectionValidity(storedJnf, companyProfile));
+        setIsLoading(false);
+      } catch {
+        if (!isMounted) return;
+        setPageError("Unable to load the requested JNF.");
+        setIsLoading(false);
+      }
     }
 
-    const canUseSelfEdit =
-      storedJnf.status === "submitted" &&
-      storedJnf.submission_count === 1 &&
-      !storedJnf.self_edit_used;
+    loadJnf();
 
-    const canEditNormally =
-      storedJnf.status === "draft" ||
-      storedJnf.status === "changes_requested";
-
-    if (storedJnf.status === "approved" || storedJnf.status === "rejected") {
-      setPageError("This JNF is read-only. You can preview it, but not edit it.");
-      setIsLoading(false);
-      return;
-    }
-
-    if (canUseSelfEdit) {
-      setForm({
-        ...storedJnf,
-        status: "draft",
-      });
-      setInfoMessage(
-        "You are using your one-time self-edit option. After resubmission, self-edit will no longer be available."
-      );
-      setIsLoading(false);
-      return;
-    }
-
-    if (!canEditNormally) {
-      setPageError("This JNF can no longer be edited. You can still preview it.");
-      setIsLoading(false);
-      return;
-    }
-
-    setForm(storedJnf);
-    setIsLoading(false);
-  }, [mode, id]);
+    return () => {
+      isMounted = false;
+    };
+  }, [mode, id, companyProfile, isSessionLoading]);
 
   const missingRequiredFields = useMemo(
     () => getJnfMissingRequiredFields(form),
@@ -111,52 +167,53 @@ export default function JnfEditorPage({
 
   const fieldErrors = useMemo(() => getJnfFieldErrors(form), [form]);
 
-  const progressSummary = useMemo(
-    () => getJnfProgressSummary(form),
-    [form]
+  const sectionValidity = useMemo(
+    () => getJnfSectionValidity(form, companyProfile),
+    [form, companyProfile]
   );
 
-  function buildPersistedRecord(): JnfRecord {
-    const recordId = form.id || createJnfId();
-    const now = new Date().toISOString();
+  const allSectionsCompleted = jnfSectionOrder.every((sectionKey) =>
+    sectionKey === "company_summary"
+      ? sectionValidity.company_summary
+      : completedSections[sectionKey] && sectionValidity[sectionKey]
+  );
 
-    return {
-      ...form,
-      id: recordId,
-      jnf_number: form.jnf_number || buildJnfNumber(recordId),
-      updated_at: now,
-    };
+  async function handleSaveDraft() {
+    setIsSaving(true);
+    try {
+      const nextRecord = await saveJnfFullRecord(form);
+      setForm(nextRecord);
+      
+      router.push(routes.recruiter.jnfs);
+    } catch {
+      alert("Failed to save the draft. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function handleSaveDraft() {
-    const nextRecord: JnfRecord = {
-      ...buildPersistedRecord(),
-      status: form.status === "changes_requested" ? "changes_requested" : "draft",
-    };
+  async function handleSubmitJnf() {
+    if (!allSectionsCompleted || missingRequiredFields.length > 0) {
+      return;
+    }
 
-    upsertStoredJnf(nextRecord);
-
-    setJnfFlashMessage({
-      message:
-        form.status === "changes_requested"
-          ? "Changes saved successfully."
-          : form.id
-            ? "Draft updated successfully."
-            : "Draft saved successfully.",
-      severity: "success",
-    });
-
-    router.push(routes.recruiter.jnfs);
+    setIsSaving(true);
+    try {
+      // First save it completely
+      const nextRecord = await saveJnfFullRecord(form);
+      
+      // Then trigger the submit workflow
+      await submitJnf(nextRecord.id);
+      
+      router.push(routes.recruiter.jnfs);
+    } catch {
+      alert("Failed to submit the JNF. Please ensure everything is valid.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function handlePreview() {
-    const nextRecord = buildPersistedRecord();
-
-    upsertStoredJnf(nextRecord);
-    router.push(routes.recruiter.jnfPreview(nextRecord.id));
-  }
-
-  if (isLoading) {
+  if (isSessionLoading || isLoading) {
     return (
       <PageContainer title="JNF Editor">
         <LoadingState message="Loading JNF..." />
@@ -172,49 +229,49 @@ export default function JnfEditorPage({
     );
   }
 
-  const saveLabel =
-    form.status === "changes_requested" ? "Save Changes" : "Save as Draft";
-
-  const previewLabel =
-    form.submission_count > 0 || form.status === "changes_requested"
-      ? "Preview & Resubmit"
-      : "Preview & Submit";
-
   return (
     <PageContainer
       title={mode === "create" ? "Create New JNF" : "Edit JNF"}
-      description="Fill the JNF details, save them as draft, and use preview before final submission."
+      description="Complete and save each accordion section one by one before submitting the JNF."
     >
       <Stack spacing={3}>
         {infoMessage ? <Alert severity="info">{infoMessage}</Alert> : null}
 
         {missingRequiredFields.length > 0 ? (
           <Alert severity="warning">
-            {missingRequiredFields.length} required field
-            {missingRequiredFields.length > 1 ? "s are" : " is"} still incomplete.
-            You can save this as a draft or preview it now, but final submission
-            will be blocked until these fields are completed.
+            Complete the required fields in each section, then click that section&apos;s
+            Save Changes button to mark it as completed.
           </Alert>
-        ) : null}
-
-        <JnfProgressSummary
-          items={progressSummary.items}
-          completedCount={progressSummary.completedCount}
-          totalCount={progressSummary.totalCount}
-        />
+        ) : (
+          <Alert severity="success">
+            All required fields are filled. Save each section to unlock final submission.
+          </Alert>
+        )}
 
         <JnfForm
           form={form}
           setForm={setForm}
           fieldErrors={fieldErrors}
+          companyProfile={companyProfile}
+          sectionValidity={sectionValidity}
+          completedSections={completedSections}
+          setCompletedSections={setCompletedSections}
         />
 
-        <JnfEditorActions
-          saveLabel={saveLabel}
-          previewLabel={previewLabel}
-          onSaveDraft={handleSaveDraft}
-          onPreview={handlePreview}
-        />
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Stack direction="row" spacing={1.5}>
+            <Button variant="outlined" onClick={handleSaveDraft}>
+              Save Draft
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSubmitJnf}
+              disabled={!allSectionsCompleted}
+            >
+              Submit JNF
+            </Button>
+          </Stack>
+        </Box>
       </Stack>
     </PageContainer>
   );

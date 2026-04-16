@@ -7,53 +7,43 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
+import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { routes } from "@/lib/routes";
 import { recruiterRegisterContent } from "../data/recruiter-register-content";
 import {
-  getRecruiterLandingPath,
   registerRecruiter,
-} from "../lib/mock-auth";
+  sendRecruiterOtp,
+  verifyRecruiterOtp,
+} from "../lib/auth-api";
+import { normalizeRecruiterRegisterCompanyPayload } from "../lib/recruiter-register-mappers";
+import {
+  isRecruiterRegisterEmailValid,
+  validateRecruiterRegisterForm,
+} from "../lib/recruiter-register-validation";
 import {
   initialRecruiterRegisterFormValues,
+  type RecruiterRegisterCompanyValues,
   type RecruiterRegisterFormErrors,
   type RecruiterRegisterFormValues,
 } from "../types";
-import PasswordVisibilityIcon from "./password-visibility-icon";
+import RecruiterRegisterCompanyFields from "./recruiter-register-company-fields";
+import RecruiterRegisterOtpSection from "./recruiter-register-otp-section";
+import RecruiterRegisterPasswordFields from "./recruiter-register-password-fields";
+import RecruiterRegisterRecruiterFields from "./recruiter-register-recruiter-fields";
 
-function validateRecruiterRegisterForm(
-  values: RecruiterRegisterFormValues
-): RecruiterRegisterFormErrors {
-  const errors: RecruiterRegisterFormErrors = {};
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (!values.name.trim()) {
-    errors.name = "Full name is required.";
-  }
-
-  if (!values.email.trim()) {
-    errors.email = "Official email address is required.";
-  } else if (!emailPattern.test(values.email.trim())) {
-    errors.email = "Enter a valid email address.";
-  }
-
-  if (!values.password) {
-    errors.password = "Password is required.";
-  } else if (values.password.length < 6) {
-    errors.password = "Password must be at least 6 characters long.";
-  }
-
-  if (!values.confirm_password) {
-    errors.confirm_password = "Please confirm your password.";
-  } else if (values.confirm_password !== values.password) {
-    errors.confirm_password = "Passwords do not match.";
-  }
-
-  return errors;
+function setCompanyFieldError(
+  currentErrors: RecruiterRegisterFormErrors,
+  field: keyof RecruiterRegisterCompanyValues
+) {
+  return {
+    ...currentErrors,
+    company: {
+      ...currentErrors.company,
+      [field]: undefined,
+    },
+  };
 }
 
 export default function RecruiterRegisterFormCard() {
@@ -64,6 +54,9 @@ export default function RecruiterRegisterFormCard() {
   );
   const [errors, setErrors] = useState<RecruiterRegisterFormErrors>({});
   const [formError, setFormError] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -75,17 +68,116 @@ export default function RecruiterRegisterFormCard() {
     setForm((current) => ({
       ...current,
       [field]: value,
+      ...(field === "email" ? { otp_verified: false, otp_code: "" } : {}),
     }));
 
     setErrors((current) => ({
       ...current,
       [field]: undefined,
     }));
+    setFormError("");
 
+    if (field === "email") {
+      setOtpMessage("");
+    }
+  }
+
+  function handleCompanyFieldChange<K extends keyof RecruiterRegisterCompanyValues>(
+    field: K,
+    value: RecruiterRegisterCompanyValues[K]
+  ) {
+    setForm((current) => ({
+      ...current,
+      company: {
+        ...current.company,
+        [field]: value,
+      },
+    }));
+
+    setErrors((current) => setCompanyFieldError(current, field));
     setFormError("");
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSendOtp() {
+    if (!form.email.trim()) {
+      setErrors((current) => ({
+        ...current,
+        email: "Official email address is required before sending OTP.",
+      }));
+      return;
+    }
+
+    if (!isRecruiterRegisterEmailValid(form.email)) {
+      setErrors((current) => ({
+        ...current,
+        email: "Enter a valid email address.",
+      }));
+      return;
+    }
+
+    setIsSendingOtp(true);
+    setFormError("");
+    setOtpMessage("");
+
+    try {
+      await sendRecruiterOtp({
+        recruiter_email: form.email.trim(),
+      });
+
+      setForm((current) => ({
+        ...current,
+        otp_verified: false,
+      }));
+      setOtpMessage("OTP sent to your official email address.");
+    } catch (error) {
+      const apiError = error as { message?: string };
+      setFormError(apiError.message ?? "Unable to send OTP right now.");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  }
+
+  async function handleVerifyOtp() {
+    if (!form.otp_code.trim()) {
+      setErrors((current) => ({
+        ...current,
+        otp_code: "Enter the OTP sent to your email.",
+      }));
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    setFormError("");
+    setOtpMessage("");
+
+    try {
+      await verifyRecruiterOtp({
+        recruiter_email: form.email.trim(),
+        otp_code: form.otp_code.trim(),
+      });
+
+      setForm((current) => ({
+        ...current,
+        otp_verified: true,
+      }));
+      setErrors((current) => ({
+        ...current,
+        otp_code: undefined,
+      }));
+      setOtpMessage("Email verified successfully. You can now create the account.");
+    } catch (error) {
+      const apiError = error as { message?: string };
+      setForm((current) => ({
+        ...current,
+        otp_verified: false,
+      }));
+      setFormError(apiError.message ?? "OTP verification failed.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const validationErrors = validateRecruiterRegisterForm(form);
@@ -99,19 +191,25 @@ export default function RecruiterRegisterFormCard() {
     setIsSubmitting(true);
     setFormError("");
 
-    const result = registerRecruiter({
-      name: form.name.trim(),
-      email: form.email.trim(),
-      password: form.password,
-    });
+    try {
+      await registerRecruiter({
+        full_name: form.full_name.trim(),
+        designation: form.designation.trim(),
+        email: form.email.trim(),
+        mobile_number: form.mobile_number.trim(),
+        alternative_mobile: form.alternative_mobile.trim(),
+        password: form.password,
+        confirm_password: form.confirm_password,
+        company: normalizeRecruiterRegisterCompanyPayload(form.company),
+      });
 
-    if (!result.ok) {
-      setFormError(result.message);
+      router.replace(routes.public.login);
+    } catch (error) {
+      const apiError = error as { message?: string };
+      setFormError(apiError.message ?? "Unable to create recruiter account.");
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    router.replace(getRecruiterLandingPath(result.session));
   }
 
   return (
@@ -128,8 +226,8 @@ export default function RecruiterRegisterFormCard() {
       >
         <Stack
           component="form"
-          spacing={2.5}
-          sx={{ width: "100%", maxWidth: 380, mx: "auto" }}
+          spacing={3}
+          sx={{ width: "100%", maxWidth: 760, mx: "auto" }}
           onSubmit={handleSubmit}
         >
           <Stack spacing={1} sx={{ textAlign: "center" }}>
@@ -142,95 +240,49 @@ export default function RecruiterRegisterFormCard() {
           </Stack>
 
           {formError ? <Alert severity="error">{formError}</Alert> : null}
+          {otpMessage ? <Alert severity="success">{otpMessage}</Alert> : null}
 
-          <Stack spacing={2}>
-            <TextField
-              label="Full Name"
-              required
-              placeholder="Enter recruiter full name"
-              value={form.name}
-              onChange={(event) =>
-                handleFieldChange("name", event.target.value)
-              }
-              error={Boolean(errors.name)}
-              helperText={errors.name}
-              fullWidth
-            />
+          <RecruiterRegisterRecruiterFields
+            form={form}
+            errors={errors}
+            onFieldChange={handleFieldChange}
+          />
 
-            <TextField
-              label="Official Email Address"
-              type="email"
-              required
-              placeholder="name@company.com"
-              value={form.email}
-              onChange={(event) =>
-                handleFieldChange("email", event.target.value)
-              }
-              error={Boolean(errors.email)}
-              helperText={errors.email}
-              fullWidth
-            />
+          <Divider />
 
-            <TextField
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              required
-              placeholder="Create a password"
-              value={form.password}
-              onChange={(event) =>
-                handleFieldChange("password", event.target.value)
-              }
-              error={Boolean(errors.password)}
-              helperText={errors.password ?? recruiterRegisterContent.passwordHint}
-              fullWidth
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      edge="end"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      onClick={() => setShowPassword((current) => !current)}
-                    >
-                      <PasswordVisibilityIcon visible={showPassword} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
+          <RecruiterRegisterOtpSection
+            form={form}
+            errors={errors}
+            isSendingOtp={isSendingOtp}
+            isVerifyingOtp={isVerifyingOtp}
+            onFieldChange={handleFieldChange}
+            onSendOtp={handleSendOtp}
+            onVerifyOtp={handleVerifyOtp}
+          />
 
-            <TextField
-              label="Confirm Password"
-              type={showConfirmPassword ? "text" : "password"}
-              required
-              placeholder="Confirm your password"
-              value={form.confirm_password}
-              onChange={(event) =>
-                handleFieldChange("confirm_password", event.target.value)
-              }
-              error={Boolean(errors.confirm_password)}
-              helperText={errors.confirm_password}
-              fullWidth
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      edge="end"
-                      aria-label={
-                        showConfirmPassword
-                          ? "Hide confirm password"
-                          : "Show confirm password"
-                      }
-                      onClick={() =>
-                        setShowConfirmPassword((current) => !current)
-                      }
-                    >
-                      <PasswordVisibilityIcon visible={showConfirmPassword} />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Stack>
+          <Divider />
+
+          <RecruiterRegisterCompanyFields
+            form={form}
+            errors={errors}
+            onCompanyFieldChange={handleCompanyFieldChange}
+          />
+
+          <Divider />
+
+          <RecruiterRegisterPasswordFields
+            form={form}
+            errors={errors}
+            showPassword={showPassword}
+            showConfirmPassword={showConfirmPassword}
+            onFieldChange={handleFieldChange}
+            onTogglePasswordVisibility={() =>
+              setShowPassword((current) => !current)
+            }
+            onToggleConfirmPasswordVisibility={() =>
+              setShowConfirmPassword((current) => !current)
+            }
+          />
 
           <Alert severity="info">
             {recruiterRegisterContent.postRegistrationNote}
@@ -239,9 +291,9 @@ export default function RecruiterRegisterFormCard() {
           <Button
             type="submit"
             variant="contained"
-            size="medium"
+            size="large"
             fullWidth
-            disabled={isSubmitting}
+            disabled={isSubmitting || !form.otp_verified}
           >
             {isSubmitting ? "Creating Account..." : "Create Account"}
           </Button>

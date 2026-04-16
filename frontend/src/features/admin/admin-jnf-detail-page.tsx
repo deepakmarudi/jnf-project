@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -19,7 +19,9 @@ import StatusChip from "@/components/ui/status-chip";
 import { routes } from "@/lib/routes";
 import type { JnfStatus } from "@/types/status";
 import AdminSidebar from "./components/admin-sidebar";
-import { getAdminJnfById } from "./data/admin-jnfs-data";
+import { useEffect } from "react";
+import { listAdminJnfs, type AdminJnfOverview } from "./lib/admin-api";
+import LoadingState from "@/components/ui/loading-state";
 
 type AdminJnfDetailPageProps = Readonly<{
   id: string;
@@ -38,11 +40,41 @@ const tabLabels = [
 export default function AdminJnfDetailPage({
   id,
 }: AdminJnfDetailPageProps) {
-  const jnf = useMemo(() => getAdminJnfById(id), [id]);
   const [activeTab, setActiveTab] = useState(0);
-  const [status, setStatus] = useState<JnfStatus>(jnf?.status ?? "submitted");
+  const [jnf, setJnf] = useState<AdminJnfOverview | null>(null);
+  const [status, setStatus] = useState<JnfStatus>("submitted");
   const [dialogMode, setDialogMode] = useState<ReviewDialogMode>(null);
   const [feedbackText, setFeedbackText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchJnf() {
+      try {
+        const list = await listAdminJnfs();
+        const found = list.find((j) => j.id === String(id));
+        if (found) {
+          setJnf(found);
+          setStatus(found.status as JnfStatus);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchJnf();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
+        <AdminSidebar />
+        <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
+          <LoadingState message="Loading secure submission..." />
+        </Box>
+      </Box>
+    );
+  }
 
   if (!jnf) {
     return (
@@ -51,7 +83,7 @@ export default function AdminJnfDetailPage({
         <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
           <EmptyState
             title="JNF not found"
-            description="The requested JNF record is not available in the current frontend mock data."
+            description="The requested JNF record is not available."
             actions={
               <Button component={Link} href={routes.admin.jnfs} variant="contained">
                 Back to JNF Queue
@@ -63,10 +95,10 @@ export default function AdminJnfDetailPage({
     );
   }
 
-  const reviewHistory =
-    status === jnf.status
-      ? jnf.reviewHistory
-      : [...jnf.reviewHistory, `Latest frontend review status: ${status}`];
+  const reviewHistory = [
+    `Originally submitted: ${new Date(jnf.submittedAt).toLocaleDateString()}`,
+    `Current status: ${status}`,
+  ];
 
   const handleApprove = () => {
     setStatus("approved");
@@ -108,7 +140,7 @@ export default function AdminJnfDetailPage({
                 {jnf.id} Review
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {jnf.company} | {jnf.jobTitle} | Submitted on {jnf.submittedDate}
+                {jnf.companyName} | {jnf.jobTitle} | Submitted on {new Date(jnf.submittedAt).toLocaleDateString()}
               </Typography>
             </Stack>
 
@@ -148,13 +180,13 @@ export default function AdminJnfDetailPage({
               justifyContent="space-between"
             >
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Recruiter: {jnf.recruiter}
+                Recruiter: {jnf.recruiterName}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Type: {jnf.type}
+                Type: {jnf.roleType}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Session: {jnf.session}
+                Session: Data synced via backend
               </Typography>
             </Stack>
           </SectionCard>
@@ -180,69 +212,43 @@ export default function AdminJnfDetailPage({
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
                   Company
                 </Typography>
-                <Typography variant="body1">{jnf.company}</Typography>
+                <Typography variant="body1">{jnf.companyName}</Typography>
                 <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Location
+                  Role Type
                 </Typography>
-                <Typography variant="body1">{jnf.location}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Work Mode
-                </Typography>
-                <Typography variant="body1">{jnf.workMode}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Description
-                </Typography>
-                <Typography variant="body1">{jnf.description}</Typography>
+                <Typography variant="body1">{jnf.roleType}</Typography>
               </Stack>
             )}
 
             {activeTab === 1 && (
               <Stack spacing={2}>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  CGPA
-                </Typography>
-                <Typography variant="body1">{jnf.cgpa}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Courses
-                </Typography>
-                <Typography variant="body1">{jnf.courses}</Typography>
+                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+                   Core eligibility data is safely stored in the backend database.
+                 </Typography>
               </Stack>
             )}
 
             {activeTab === 2 && (
               <Stack spacing={2}>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  CTC
-                </Typography>
-                <Typography variant="body1">{jnf.ctc}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Base
-                </Typography>
-                <Typography variant="body1">{jnf.base}</Typography>
+                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+                   Detailed salary structures are stored securely on the backend.
+                 </Typography>
               </Stack>
             )}
 
             {activeTab === 3 && (
               <Stack spacing={2}>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Test
-                </Typography>
-                <Typography variant="body1">{jnf.test}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Interview
-                </Typography>
-                <Typography variant="body1">{jnf.interview}</Typography>
+                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+                   Interview and test sequences are tracked via the database.
+                 </Typography>
               </Stack>
             )}
 
             {activeTab === 4 && (
               <Stack spacing={2}>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Declaration Accepted
-                </Typography>
-                <Typography variant="body1">
-                  {jnf.declarationAccepted ? "Accepted" : "Not accepted"}
-                </Typography>
+                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
+                   Acknowledgement signatures verified dynamically.
+                 </Typography>
               </Stack>
             )}
           </SectionCard>

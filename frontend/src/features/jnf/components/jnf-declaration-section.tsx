@@ -12,208 +12,218 @@ type JnfDeclarationSectionProps = Readonly<{
   form: JnfRecord;
   setForm: React.Dispatch<React.SetStateAction<JnfRecord>>;
   fieldErrors: JnfFieldErrors;
+  embedded?: boolean;
 }>;
 
 export default function JnfDeclarationSection({
   form,
   setForm,
   fieldErrors,
+  embedded = false,
 }: JnfDeclarationSectionProps) {
-  return (
-    <SectionCard
-      title="Declaration and Submit Readiness"
-      description="Capture the authorized signatory and the required recruiter confirmations."
-    >
-      <Stack spacing={2.5}>
-        <Alert severity="info">
-          Final submission is completed from the preview page, but the declaration
-          details and confirmations should be completed here first.
-        </Alert>
+  const content = (
+    <Stack spacing={2.5}>
+      <Alert severity="info">
+        Final submission is completed from the preview page, but the declaration
+        details and confirmations should be completed here first.
+      </Alert>
 
-        <JnfFormGrid>
-          <TextField
-            label="Authorized Signatory Name"
-            required
-            value={form.declaration.authorized_signatory_name}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                declaration: {
-                  ...current.declaration,
-                  authorized_signatory_name: event.target.value,
-                },
-              }))
-            }
-            error={Boolean(fieldErrors["declaration.authorized_signatory_name"])}
-            helperText={fieldErrors["declaration.authorized_signatory_name"]}
-            fullWidth
-          />
-
-          <TextField
-            label="Authorized Signatory Designation"
-            required
-            value={form.declaration.authorized_signatory_designation}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                declaration: {
-                  ...current.declaration,
-                  authorized_signatory_designation: event.target.value,
-                },
-              }))
-            }
-            error={Boolean(fieldErrors["declaration.authorized_signatory_designation"])}
-            helperText={fieldErrors["declaration.authorized_signatory_designation"]}
-            fullWidth
-          />
-
-          <TextField
-            label="Authorized Signatory Email"
-            type="email"
-            value={form.declaration.authorized_signatory_email}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                declaration: {
-                  ...current.declaration,
-                  authorized_signatory_email: event.target.value,
-                },
-              }))
-            }
-            fullWidth
-          />
-
-          <TextField
-            label="Authorized Signatory Phone"
-            value={form.declaration.authorized_signatory_phone}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                declaration: {
-                  ...current.declaration,
-                  authorized_signatory_phone: event.target.value,
-                },
-              }))
-            }
-            fullWidth
-          />
-
-          <TextField
-            label="Declaration Place"
-            value={form.declaration.declaration_place}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                declaration: {
-                  ...current.declaration,
-                  declaration_place: event.target.value,
-                },
-              }))
-            }
-            fullWidth
-          />
-
-          <TextField
-            label="Declaration Date"
-            type="date"
-            value={form.declaration.declaration_date}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                declaration: {
-                  ...current.declaration,
-                  declaration_date: event.target.value,
-                },
-              }))
-            }
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-          />
-        </JnfFormGrid>
-
-        <Stack spacing={1}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={form.declaration.information_confirmed}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    declaration: {
-                      ...current.declaration,
-                      information_confirmed: event.target.checked,
-                    },
-                  }))
-                }
-              />
-            }
-            label="I confirm that the information provided in this JNF is correct."
-          />
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={form.declaration.authorization_confirmed}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    declaration: {
-                      ...current.declaration,
-                      authorization_confirmed: event.target.checked,
-                    },
-                  }))
-                }
-              />
-            }
-            label="I am authorized to submit this JNF on behalf of the company."
-          />
-
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={form.declaration.policy_consent_confirmed}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    declaration: {
-                      ...current.declaration,
-                      policy_consent_confirmed: event.target.checked,
-                    },
-                  }))
-                }
-              />
-            }
-            label="I agree to the relevant placement and recruiter submission guidelines."
-          />
-        </Stack>
-
-        {fieldErrors["declaration.information_confirmed"] ||
-        fieldErrors["declaration.authorization_confirmed"] ||
-        fieldErrors["declaration.policy_consent_confirmed"] ? (
-          <Alert severity="warning">
-            Complete all declaration confirmations before final submission.
-          </Alert>
-        ) : null}
-
+      <JnfFormGrid>
         <TextField
-          label="Typed Signature"
+          label="Authorized Signatory Name"
           required
-          placeholder="Type your full name as signature"
-          value={form.declaration.typed_signature}
+          value={form.declaration.authorized_signatory_name}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               declaration: {
                 ...current.declaration,
-                typed_signature: event.target.value,
+                authorized_signatory_name: event.target.value,
               },
             }))
           }
-          error={Boolean(fieldErrors["declaration.typed_signature"])}
-          helperText={fieldErrors["declaration.typed_signature"]}
+          error={Boolean(fieldErrors["declaration.authorized_signatory_name"])}
+          helperText={fieldErrors["declaration.authorized_signatory_name"]}
           fullWidth
         />
+
+        <TextField
+          label="Authorized Signatory Designation"
+          required
+          value={form.declaration.authorized_signatory_designation}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              declaration: {
+                ...current.declaration,
+                authorized_signatory_designation: event.target.value,
+              },
+            }))
+          }
+          error={Boolean(fieldErrors["declaration.authorized_signatory_designation"])}
+          helperText={fieldErrors["declaration.authorized_signatory_designation"]}
+          fullWidth
+        />
+
+        <TextField
+          label="Authorized Signatory Email"
+          type="email"
+          value={form.declaration.authorized_signatory_email}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              declaration: {
+                ...current.declaration,
+                authorized_signatory_email: event.target.value,
+              },
+            }))
+          }
+          fullWidth
+        />
+
+        <TextField
+          label="Authorized Signatory Phone"
+          value={form.declaration.authorized_signatory_phone}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              declaration: {
+                ...current.declaration,
+                authorized_signatory_phone: event.target.value,
+              },
+            }))
+          }
+          fullWidth
+        />
+
+        <TextField
+          label="Declaration Place"
+          value={form.declaration.declaration_place}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              declaration: {
+                ...current.declaration,
+                declaration_place: event.target.value,
+              },
+            }))
+          }
+          fullWidth
+        />
+
+        <TextField
+          label="Declaration Date"
+          type="date"
+          value={form.declaration.declaration_date}
+          onChange={(event) =>
+            setForm((current) => ({
+              ...current,
+              declaration: {
+                ...current.declaration,
+                declaration_date: event.target.value,
+              },
+            }))
+          }
+          InputLabelProps={{ shrink: true }}
+          fullWidth
+        />
+      </JnfFormGrid>
+
+      <Stack spacing={1}>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={form.declaration.information_confirmed}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  declaration: {
+                    ...current.declaration,
+                    information_confirmed: event.target.checked,
+                  },
+                }))
+              }
+            />
+          }
+          label="I confirm that the information provided in this JNF is correct."
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={form.declaration.authorization_confirmed}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  declaration: {
+                    ...current.declaration,
+                    authorization_confirmed: event.target.checked,
+                  },
+                }))
+              }
+            />
+          }
+          label="I am authorized to submit this JNF on behalf of the company."
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={form.declaration.policy_consent_confirmed}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  declaration: {
+                    ...current.declaration,
+                    policy_consent_confirmed: event.target.checked,
+                  },
+                }))
+              }
+            />
+          }
+          label="I agree to the relevant placement and recruiter submission guidelines."
+        />
       </Stack>
+
+      {fieldErrors["declaration.information_confirmed"] ||
+      fieldErrors["declaration.authorization_confirmed"] ||
+      fieldErrors["declaration.policy_consent_confirmed"] ? (
+        <Alert severity="warning">
+          Complete all declaration confirmations before final submission.
+        </Alert>
+      ) : null}
+
+      <TextField
+        label="Typed Signature"
+        required
+        placeholder="Type your full name as signature"
+        value={form.declaration.typed_signature}
+        onChange={(event) =>
+          setForm((current) => ({
+            ...current,
+            declaration: {
+              ...current.declaration,
+              typed_signature: event.target.value,
+            },
+          }))
+        }
+        error={Boolean(fieldErrors["declaration.typed_signature"])}
+        helperText={fieldErrors["declaration.typed_signature"]}
+        fullWidth
+      />
+    </Stack>
+  );
+
+  if (embedded) {
+    return content;
+  }
+
+  return (
+    <SectionCard
+      title="Declaration and Submit Readiness"
+      description="Capture the authorized signatory and the required recruiter confirmations."
+    >
+      {content}
     </SectionCard>
   );
 }

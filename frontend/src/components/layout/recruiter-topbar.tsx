@@ -9,7 +9,7 @@ import useRecruiterSession from "@/features/auth/hooks/use-recruiter-session";
 import { routes } from "@/lib/routes";
 
 export default function RecruiterTopbar() {
-  const session = useRecruiterSession();
+  const { session } = useRecruiterSession();
   const recruiterName = session?.recruiter_name?.trim() || "Recruiter";
   const recruiterEmail = session?.recruiter_email?.trim() || "";
 

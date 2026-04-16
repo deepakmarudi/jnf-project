@@ -16,10 +16,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { routes } from "@/lib/routes";
 import { recruiterLoginContent } from "../data/recruiter-login-content";
-import {
-  getRecruiterLandingPath,
-  loginRecruiter,
-} from "../lib/mock-auth";
+import { signIn } from "next-auth/react";
 import {
   initialRecruiterLoginFormValues,
   type RecruiterLoginFormErrors,
@@ -41,6 +38,8 @@ function validateRecruiterLoginForm(
 
   if (!values.password) {
     errors.password = "Password is required.";
+  } else if (values.password.length < 8) {
+    errors.password = "Password must be at least 8 characters long.";
   }
 
   return errors;
@@ -89,7 +88,7 @@ export default function RecruiterLoginFormCard() {
     }
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const validationErrors = validateRecruiterLoginForm(form);
@@ -108,18 +107,24 @@ export default function RecruiterLoginFormCard() {
     setIsSubmitting(true);
     setFormError("");
 
-    const result = loginRecruiter({
-      email: form.email.trim(),
-      password: form.password,
-    });
+    try {
+      const response = await signIn("credentials", {
+        redirect: false,
+        email: form.email.trim(),
+        password: form.password,
+        role: "recruiter",
+      });
 
-    if (!result.ok) {
-      setFormError(result.message);
+      if (response?.error) {
+        setFormError(response.error);
+      } else if (response?.ok) {
+        router.replace(routes.recruiter.company);
+      }
+    } catch {
+      setFormError("Unable to sign in right now.");
+    } finally {
       setIsSubmitting(false);
-      return;
     }
-
-    router.replace(getRecruiterLandingPath(result.session));
   }
 
   return (

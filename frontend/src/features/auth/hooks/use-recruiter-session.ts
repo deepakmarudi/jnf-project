@@ -1,15 +1,28 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { getRecruiterSession } from "../lib/mock-auth";
-import type { MockRecruiterSession } from "../types";
+import { useSession } from "next-auth/react";
+import type { RecruiterSession } from "../types";
 
 export default function useRecruiterSession() {
-  const [session, setSession] = useState<MockRecruiterSession | null>(null);
+  const { data: session, status } = useSession();
+  const isLoading = status === "loading";
 
-  useEffect(() => {
-    setSession(getRecruiterSession());
-  }, []);
+  let recruiterSession: RecruiterSession | null = null;
 
-  return session;
+  if (session?.user && session.user.role === "recruiter") {
+    recruiterSession = {
+      recruiter_id: Number(session.user.id),
+      recruiter_name: session.user.name || "",
+      recruiter_email: session.user.email || "",
+      company_id: null, // Will need to fetch company info dynamically if required on layout
+      company_name: null,
+      company_profile_completed: false,
+      is_logged_in: true,
+    };
+  }
+
+  return {
+    session: recruiterSession,
+    isLoading,
+  };
 }

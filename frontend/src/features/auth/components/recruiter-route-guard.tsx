@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import LoadingState from "@/components/ui/loading-state";
-import {
-  canAccessRecruiterPath,
-  getRecruiterSession,
-} from "../lib/mock-auth";
+import { routes } from "@/lib/routes";
+import useRecruiterSession from "../hooks/use-recruiter-session";
 
 type RecruiterRouteGuardProps = Readonly<{
   children: React.ReactNode;
@@ -17,22 +15,39 @@ export default function RecruiterRouteGuard({
 }: RecruiterRouteGuardProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+  const { session, isLoading } = useRecruiterSession();
 
   useEffect(() => {
-    const recruiterSession = getRecruiterSession();
-    const accessResult = canAccessRecruiterPath(pathname, recruiterSession);
-
-    if (!accessResult.allowed) {
-      router.replace(accessResult.redirectTo);
+    if (isLoading) {
       return;
     }
 
-    setIsCheckingAccess(false);
-  }, [pathname, router]);
+    if (!session?.is_logged_in) {
+      router.replace(routes.public.login);
+      return;
+    }
 
-  if (isCheckingAccess) {
+    if (
+      !session.company_profile_completed &&
+      pathname !== routes.recruiter.company
+    ) {
+      router.replace(routes.recruiter.company);
+    }
+  }, [isLoading, pathname, router, session]);
+
+  if (isLoading) {
     return <LoadingState message="Checking recruiter access..." />;
+  }
+
+  if (!session?.is_logged_in) {
+    return <LoadingState message="Redirecting to login..." />;
+  }
+
+  if (
+    !session.company_profile_completed &&
+    pathname !== routes.recruiter.company
+  ) {
+    return <LoadingState message="Redirecting to company profile..." />;
   }
 
   return <>{children}</>;
