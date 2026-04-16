@@ -15,7 +15,6 @@ class SendOtpRequest extends FormRequest
     {
         return [
             'recruiter_email' => ['required', 'email', 'max:255'],
-            'recaptcha_token' => ['required', 'string'],
         ];
     }
 }
