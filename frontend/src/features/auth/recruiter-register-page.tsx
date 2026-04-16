@@ -1,15 +1,15 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import RecruiterPublicAuthGuard from "./components/recruiter-public-auth-guard";
-import RecruiterLoginFormCard from "./components/recruiter-login-form-card";
-import RecruiterLoginHeroCard from "./components/recruiter-login-hero-card";
-import RecruiterLoginPageHeader from "./components/recruiter-login-page-header";
+import RecruiterRegisterFormCard from "./components/recruiter-register-form-card";
+import RecruiterRegisterHeroCard from "./components/recruiter-register-hero-card";
+import RecruiterRegisterPageHeader from "./components/recruiter-register-page-header";
 
-export default function RecruiterLoginPage() {
+export default function RecruiterRegisterPage() {
   return (
     <RecruiterPublicAuthGuard>
       <Stack spacing={{ xs: 3, md: 4 }}>
-        <RecruiterLoginPageHeader />
+        <RecruiterRegisterPageHeader />
 
         <Box
           sx={{
@@ -22,8 +22,8 @@ export default function RecruiterLoginPage() {
             alignItems: "stretch",
           }}
         >
-          <RecruiterLoginHeroCard />
-          <RecruiterLoginFormCard />
+          <RecruiterRegisterHeroCard />
+          <RecruiterRegisterFormCard />
         </Box>
       </Stack>
     </RecruiterPublicAuthGuard>

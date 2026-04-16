@@ -1,4 +1,5 @@
-import Box from "@mui/material/Box";
+import RecruiterShell from "@/components/layout/recruiter-shell";
+import RecruiterRouteGuard from "@/features/auth/components/recruiter-route-guard";
 
 type RecruiterLayoutProps = Readonly<{
   children: React.ReactNode;
@@ -8,13 +9,8 @@ export default function RecruiterLayout({
   children,
 }: RecruiterLayoutProps) {
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        backgroundColor: "background.default",
-      }}
-    >
-      {children}
-    </Box>
+    <RecruiterRouteGuard>
+      <RecruiterShell>{children}</RecruiterShell>
+    </RecruiterRouteGuard>
   );
 }
