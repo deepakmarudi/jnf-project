@@ -2,7 +2,6 @@ import { fetchJson } from "@/lib/fetch-json";
 import type {
   RecruiterLoginResponse,
   RecruiterMeResponse,
-  RecruiterRegisterFormValues,
 } from "../types";
 
 type SendOtpPayload = {
@@ -14,6 +13,8 @@ type VerifyOtpPayload = {
   otp_code: string;
 };
 
+import { normalizeRecruiterRegisterCompanyPayload } from "./recruiter-register-mappers";
+
 type RegisterRecruiterPayload = {
   full_name: string;
   designation: string;
@@ -22,7 +23,7 @@ type RegisterRecruiterPayload = {
   alternative_mobile: string;
   password: string;
   confirm_password: string;
-  company: RecruiterRegisterFormValues["company"];
+  company: ReturnType<typeof normalizeRecruiterRegisterCompanyPayload>;
 };
 
 type LogoutResponse = {

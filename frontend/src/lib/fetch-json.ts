@@ -2,9 +2,9 @@ import { buildApiUrl } from "@/lib/api-client";
 import type { ApiErrorResponse, ApiSuccessResponse } from "@/types/api";
 import { getSession } from "next-auth/react";
 
-type JsonPrimitive = string | number | boolean | null;
-type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
-type JsonObject = { [key: string]: JsonValue };
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+export type JsonObject = { [key: string]: JsonValue };
 
 type FetchJsonOptions = Omit<RequestInit, "body"> & {
   body?: JsonObject;

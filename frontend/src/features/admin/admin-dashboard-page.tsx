@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
@@ -7,16 +10,45 @@ import AdminSidebar from "./components/admin-sidebar";
 import AdminStatsGrid from "./components/admin-stats-grid";
 import AdminRecentActivityTable from "./components/admin-recent-activity-table";
 import AdminNotificationPanel from "./components/admin-notification-panel";
+import { getAdminDashboardData, type AdminDashboardStats } from "./lib/admin-api";
+import LoadingState from "@/components/ui/loading-state";
+
+const initialStats: AdminDashboardStats = {
+  totalRecruiters: 0,
+  totalCompanies: 0,
+  totalJnfsSubmitted: 0,
+  approvedJnfs: 0,
+  pendingJnfs: 0,
+};
 
 export default function AdminDashboardPage() {
-  // TODO: Replace these with actual API calls
-  const stats = {
-    totalRecruiters: 24,
-    totalCompanies: 18,
-    totalJnfsSubmitted: 42,
-    approvedJnfs: 32,
-    pendingJnfs: 10,
-  };
+  const [stats, setStats] = useState<AdminDashboardStats>(initialStats);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const data = await getAdminDashboardData();
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to fetch admin stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchStats();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
+        <AdminSidebar />
+        <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
+          <LoadingState message="Loading dashboard data..." />
+        </Box>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
@@ -58,7 +90,7 @@ export default function AdminDashboardPage() {
 
           {/* Recent Activity and Notifications */}
           <Grid container spacing={3}>
-            <Grid item xs={12} lg={8}>
+            <Grid size={{ xs: 12, lg: 8 }}>
               <Box
                 sx={{
                   p: 3,
@@ -77,7 +109,7 @@ export default function AdminDashboardPage() {
                 </Stack>
               </Box>
             </Grid>
-            <Grid item xs={12} lg={4}>
+            <Grid size={{ xs: 12, lg: 4 }}>
               <Box
                 sx={{
                   p: 3,

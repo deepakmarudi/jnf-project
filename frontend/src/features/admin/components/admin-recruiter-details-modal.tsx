@@ -10,24 +10,12 @@ import Stack from "@mui/material/Stack";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Chip from "@mui/material/Chip";
-
-type RecruiterStatus = "active" | "blocked";
-
-type Recruiter = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  company: string;
-  status: RecruiterStatus;
-  designation: string;
-  alternativeMobile?: string;
-};
+import { type AdminRecruiterOverview } from "../lib/admin-api";
 
 type AdminRecruiterDetailsModalProps = {
   open: boolean;
   onClose: () => void;
-  recruiter: Recruiter | null;
+  recruiter: AdminRecruiterOverview | null;
 };
 
 export default function AdminRecruiterDetailsModal({
@@ -37,7 +25,7 @@ export default function AdminRecruiterDetailsModal({
 }: AdminRecruiterDetailsModalProps) {
   if (!recruiter) return null;
 
-  const getStatusColor = (status: RecruiterStatus) => {
+  const getStatusColor = (status: string) => {
     return status === "active" ? "#16a34a" : "#dc2626";
   };
 
@@ -69,14 +57,7 @@ export default function AdminRecruiterDetailsModal({
                 <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.5 }}>
                   Full Name
                 </Typography>
-                <Typography variant="body1">{recruiter.name}</Typography>
-              </Box>
-
-              <Box>
-                <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.5 }}>
-                  Designation
-                </Typography>
-                <Typography variant="body1">{recruiter.designation}</Typography>
+                <Typography variant="body1">{recruiter.fullName}</Typography>
               </Box>
 
               <Box>
@@ -90,34 +71,8 @@ export default function AdminRecruiterDetailsModal({
                 <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.5 }}>
                   Company
                 </Typography>
-                <Typography variant="body1">{recruiter.company}</Typography>
+                <Typography variant="body1">{recruiter.companyName || "N/A"}</Typography>
               </Box>
-            </Stack>
-          </Box>
-
-          <Divider />
-
-          {/* Contact Info */}
-          <Box>
-            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              Contact Information
-            </Typography>
-            <Stack spacing={2}>
-              <Box>
-                <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.5 }}>
-                  Contact Number
-                </Typography>
-                <Typography variant="body1">{recruiter.phone}</Typography>
-              </Box>
-
-              {recruiter.alternativeMobile && (
-                <Box>
-                  <Typography variant="body2" sx={{ color: "text.secondary", mb: 0.5 }}>
-                    Alternative Mobile
-                  </Typography>
-                  <Typography variant="body1">{recruiter.alternativeMobile}</Typography>
-                </Box>
-              )}
             </Stack>
           </Box>
 

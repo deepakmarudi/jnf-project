@@ -252,7 +252,6 @@ export default function JnfEditorPage({
           form={form}
           setForm={setForm}
           fieldErrors={fieldErrors}
-          companyProfile={companyProfile}
           sectionValidity={sectionValidity}
           completedSections={completedSections}
           setCompletedSections={setCompletedSections}

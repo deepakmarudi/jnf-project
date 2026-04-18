@@ -129,15 +129,15 @@ export function mapContactToBackendPayload(contact: JnfContact) {
 
 export function mapEligibilityResponseToRecord(
   eligibility: BackendJnfEligibilityResponse
-) {
+): JnfRecord["eligibility"] {
   const rule = eligibility.eligibility_rule;
   const next = createEmptyJnfEligibility();
 
   return {
     ...next,
-    minimum_cgpa: rule?.minimum_cgpa ?? "",
-    max_total_backlogs: rule?.max_backlogs ?? "",
-    minimum_class_10_percentage: rule?.high_school_percentage_criterion ?? "",
+    minimum_cgpa: rule?.minimum_cgpa != null ? Number(rule.minimum_cgpa) : "",
+    max_total_backlogs: rule?.max_backlogs != null ? Number(rule.max_backlogs) : "",
+    minimum_class_10_percentage: rule?.high_school_percentage_criterion != null ? Number(rule.high_school_percentage_criterion) : "",
     gender_filter:
       rule?.gender_filter === "others"
         ? "other"

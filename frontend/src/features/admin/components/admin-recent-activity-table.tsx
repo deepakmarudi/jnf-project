@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -6,73 +9,70 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
-
-type ActivityStatus = "pending" | "approved" | "rejected";
-
-type RecentActivity = {
-  id: string;
-  recruiterName: string;
-  company: string;
-  jobTitle: string;
-  status: ActivityStatus;
-  date: string;
-};
-
-const mockActivities: RecentActivity[] = [
-  {
-    id: "1",
-    recruiterName: "John Doe",
-    company: "Tech Corp",
-    jobTitle: "Software Engineer",
-    status: "approved",
-    date: "2024-04-05",
-  },
-  {
-    id: "2",
-    recruiterName: "Jane Smith",
-    company: "Data Inc",
-    jobTitle: "Data Analyst",
-    status: "pending",
-    date: "2024-04-04",
-  },
-  {
-    id: "3",
-    recruiterName: "Bob Johnson",
-    company: "Web Solutions",
-    jobTitle: "Frontend Developer",
-    status: "rejected",
-    date: "2024-04-03",
-  },
-];
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import { listAdminActivities, type AdminActivityRow } from "../lib/admin-api";
+import LoadingState from "@/components/ui/loading-state";
 
 export default function AdminRecentActivityTable() {
-  const getStatusColor = (status: ActivityStatus) => {
-    switch (status) {
+  const [activities, setActivities] = useState<AdminActivityRow[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchActivities() {
+      try {
+        const data = await listAdminActivities();
+        setActivities(data);
+      } catch (error) {
+        console.error("Failed to fetch admin activities:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchActivities();
+  }, []);
+
+  const getActionColor = (action: string) => {
+    switch (action.toLowerCase()) {
       case "approved":
         return "#16a34a";
-      case "pending":
+      case "reviewed":
+        return "#2563eb";
+      case "changes_requested":
         return "#f59e0b";
-      case "rejected":
+      case "closed":
         return "#dc2626";
       default:
-        return "default";
+        return "#64748b";
     }
   };
+
+  if (isLoading) {
+    return <LoadingState message="Loading activity..." />;
+  }
+
+  if (activities.length === 0) {
+    return (
+      <Box sx={{ p: 4, textAlign: "center" }}>
+        <Typography color="text.secondary">No recent activity found.</Typography>
+      </Box>
+    );
+  }
 
   return (
     <TableContainer component={Paper} sx={{ borderRadius: 3 }}>
       <Table>
         <TableHead>
           <TableRow>
-            <TableCell>Recruiter Name</TableCell>
+            <TableCell>Actor</TableCell>
             <TableCell>Company</TableCell>
-            <TableCell>Job Title</TableCell>
-            <TableCell>Status</TableCell>
+            <TableCell>Action</TableCell>
+            <TableCell>Remarks</TableCell>
             <TableCell>Date</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
-          {mockActivities.map((activity, index) => (
+          {activities.map((activity, index) => (
             <TableRow
               key={activity.id}
               sx={{
@@ -82,23 +82,27 @@ export default function AdminRecentActivityTable() {
                 backgroundColor: index % 2 === 0 ? "inherit" : "#f9fafb",
               }}
             >
-              <TableCell>{activity.recruiterName}</TableCell>
-              <TableCell>{activity.company}</TableCell>
-              <TableCell>{activity.jobTitle}</TableCell>
+              <TableCell>{activity.actorName}</TableCell>
+              <TableCell>{activity.companyName}</TableCell>
               <TableCell>
                 <Chip
-                  label={activity.status}
+                  label={activity.action.replace("_", " ")}
                   sx={{
-                    backgroundColor: getStatusColor(activity.status),
+                    backgroundColor: getActionColor(activity.action),
                     color: "white",
                     fontWeight: 500,
-                    padding: "4px 10px",
                     borderRadius: 999,
+                    textTransform: "capitalize",
                   }}
                   size="small"
                 />
               </TableCell>
-              <TableCell>{activity.date}</TableCell>
+              <TableCell sx={{ maxWidth: 200, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                {activity.remarks || "-"}
+              </TableCell>
+              <TableCell>
+                {new Date(activity.createdAt).toLocaleDateString()}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

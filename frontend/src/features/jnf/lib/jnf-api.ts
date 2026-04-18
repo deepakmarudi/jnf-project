@@ -1,4 +1,4 @@
-import { fetchJson } from "@/lib/fetch-json";
+import { fetchJson, type JsonObject } from "@/lib/fetch-json";
 
 export type BackendJnfCore = {
   id: number;
@@ -195,7 +195,7 @@ export async function getJnfCore(jnfId: string | number) {
   });
 }
 
-export async function createJnfCore(payload: Record<string, unknown>) {
+export async function createJnfCore(payload: JsonObject) {
   return fetchJson<JnfCoreResponse>("/jnfs", {
     method: "POST",
     body: payload,
@@ -204,7 +204,7 @@ export async function createJnfCore(payload: Record<string, unknown>) {
 
 export async function updateJnfCore(
   jnfId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}`, {
     method: "PUT",
@@ -232,7 +232,7 @@ export async function listJnfContacts(jnfId: string | number) {
 
 export async function createJnfContact(
   jnfId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<{ contact: BackendJnfContact }>(`/jnfs/${jnfId}/contacts`, {
     method: "POST",
@@ -242,7 +242,7 @@ export async function createJnfContact(
 
 export async function updateJnfContact(
   contactId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<{ contact: BackendJnfContact }>(`/jnfs/contacts/${contactId}`, {
     method: "PUT",
@@ -264,7 +264,7 @@ export async function getJnfEligibility(jnfId: string | number) {
 
 export async function upsertJnfEligibility(
   jnfId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<BackendJnfEligibilityResponse>(`/jnfs/${jnfId}/eligibility`, {
     method: "PUT",
@@ -280,7 +280,7 @@ export async function getJnfSalary(jnfId: string | number) {
 
 export async function upsertJnfSalary(
   jnfId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<SalaryResponse>(`/jnfs/${jnfId}/salary`, {
     method: "PUT",
@@ -296,7 +296,7 @@ export async function listJnfRounds(jnfId: string | number) {
 
 export async function createJnfRound(
   jnfId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<{ round: BackendJnfRound }>(`/jnfs/${jnfId}/rounds`, {
     method: "POST",
@@ -306,7 +306,7 @@ export async function createJnfRound(
 
 export async function updateJnfRound(
   roundId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<{ round: BackendJnfRound }>(`/jnfs/rounds/${roundId}`, {
     method: "PUT",
@@ -328,7 +328,7 @@ export async function getJnfDeclaration(jnfId: string | number) {
 
 export async function upsertJnfDeclaration(
   jnfId: string | number,
-  payload: Record<string, unknown>
+  payload: JsonObject
 ) {
   return fetchJson<DeclarationResponse>(`/jnfs/${jnfId}/declaration`, {
     method: "PUT",

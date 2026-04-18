@@ -18,7 +18,7 @@ export default function AdminStatsGrid({
 }: AdminStatsGridProps) {
   return (
     <Grid container spacing={3}>
-      <Grid item xs={12} sm={6} lg={2.4}>
+      <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
         <AdminStatCard
           label="Total Recruiters"
           value={totalRecruiters}
@@ -26,7 +26,7 @@ export default function AdminStatsGrid({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} lg={2.4}>
+      <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
         <AdminStatCard
           label="Total Companies"
           value={totalCompanies}
@@ -34,7 +34,7 @@ export default function AdminStatsGrid({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} lg={2.4}>
+      <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
         <AdminStatCard
           label="JNFs Submitted"
           value={totalJnfsSubmitted}
@@ -42,7 +42,7 @@ export default function AdminStatsGrid({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} lg={2.4}>
+      <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
         <AdminStatCard
           label="Approved JNFs"
           value={approvedJnfs}
@@ -50,7 +50,7 @@ export default function AdminStatsGrid({
         />
       </Grid>
 
-      <Grid item xs={12} sm={6} lg={2.4}>
+      <Grid size={{ xs: 12, sm: 6, lg: 2.4 }}>
         <AdminStatCard
           label="Pending JNFs"
           value={pendingJnfs}
