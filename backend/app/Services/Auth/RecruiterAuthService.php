@@ -46,9 +46,25 @@ class RecruiterAuthService
             ['name' => $companyName],
             [
                 'website' => $companyData->get('website'),
+                'postal_address' => $companyData->get('postal_address'),
+                'employee_count' => $companyData->get('employee_count'),
                 'sector' => $companyData->get('sector'),
+                'logo_path' => $companyData->get('logo_path'),
+                'category_or_org_type' => $companyData->get('category_or_org_type'),
+                'date_of_establishment' => $companyData->get('date_of_establishment'),
+                'annual_turnover' => $companyData->get('annual_turnover'),
+                'social_media_url' => $companyData->get('social_media_url'),
+                'hq_country' => $companyData->get('hq_country'),
+                'hq_city' => $companyData->get('hq_city'),
+                'nature_of_business' => $companyData->get('nature_of_business'),
+                'description' => $companyData->get('description'),
+                'is_mnc' => $companyData->get('is_mnc'),
             ]
         );
+
+        if ($company->wasRecentlyCreated && $companyData->has('industry_tag_ids')) {
+            $company->industryTags()->sync($companyData->get('industry_tag_ids', []));
+        }
 
         // 4. Create recruiter
         $recruiter = Recruiter::create([
@@ -58,7 +74,7 @@ class RecruiterAuthService
             'email' => $email,
             'password' => Hash::make($validatedData['password']),
             'mobile_number' => $validatedData['mobile_number'] ?? null,
-            'status' => RecruiterStatus::Pending,
+            'status' => RecruiterStatus::Active, // Fast-track for development
         ]);
 
         // 5. Invalidate OTP (single-use enforcement)

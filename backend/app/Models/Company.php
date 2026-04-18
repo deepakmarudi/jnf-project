@@ -53,7 +53,6 @@ class Company extends Model
      */
     public function industryTags(): BelongsToMany
     {
-        return $this->belongsToMany(IndustryTag::class, 'company_industry_tags')
-            ->withTimestamps();
+        return $this->belongsToMany(IndustryTag::class, 'company_industry_tags');
     }
 }

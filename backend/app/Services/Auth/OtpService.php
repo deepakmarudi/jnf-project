@@ -36,6 +36,7 @@ class OtpService
         ]);
 
         // 5. In production → send email here
+        \Illuminate\Support\Facades\Log::info("DEVELOPMENT OTP for {$email} is: {$otpCode}");
 
         return [
             'recruiter_email' => $email,

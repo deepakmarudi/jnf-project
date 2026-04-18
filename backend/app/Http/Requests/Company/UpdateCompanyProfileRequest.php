@@ -30,7 +30,7 @@ class UpdateCompanyProfileRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'is_mnc' => ['nullable', 'boolean'],
             'industry_tag_ids' => ['nullable', 'array'],
-            'industry_tag_ids.*' => ['integer'],
+            'industry_tag_ids.*' => ['integer', 'exists:industry_tags,id'],
         ];
     }
 }

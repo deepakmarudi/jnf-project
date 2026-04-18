@@ -26,7 +26,7 @@ class CompanyController extends Controller
         UpdateCompanyProfileRequest $request
     ): JsonResponse {
         return $this->api()->success(
-            $this->companyProfileService->updateCurrent($request->validated())
+            $this->companyProfileService->updateCurrent($request->validated(), $request->user())
         );
     }
 }

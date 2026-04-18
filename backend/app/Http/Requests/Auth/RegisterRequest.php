@@ -38,7 +38,7 @@ class RegisterRequest extends FormRequest
             'company.description' => ['nullable', 'string'],
             'company.is_mnc' => ['nullable', 'boolean'],
             'company.industry_tag_ids' => ['nullable', 'array'],
-            'company.industry_tag_ids.*' => ['integer'],
+            'company.industry_tag_ids.*' => ['integer', 'exists:industry_tags,id'],
         ];
     }
 }
