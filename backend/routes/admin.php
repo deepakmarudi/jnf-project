@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\AdminAuthController;
 use App\Http\Controllers\Api\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\Admin\AdminRecruiterController;
 use App\Http\Controllers\Api\Admin\AdminReviewController;
+use App\Http\Controllers\Api\Admin\AdminGeneralController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
@@ -38,5 +39,10 @@ Route::prefix('admin')->group(function () {
         // Recruiter management
         Route::get('/recruiters', [AdminRecruiterController::class, 'index']);
         Route::patch('/recruiters/{recruiter}/status', [AdminRecruiterController::class, 'updateStatus']);
+
+        // General admin data
+        Route::get('/companies', [AdminGeneralController::class, 'companies']);
+        Route::get('/activities', [AdminGeneralController::class, 'activities']);
+        Route::get('/notifications', [AdminGeneralController::class, 'notifications']);
     });
 });

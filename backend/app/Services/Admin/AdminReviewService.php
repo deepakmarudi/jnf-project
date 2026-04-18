@@ -3,6 +3,8 @@
 namespace App\Services\Admin;
 
 use App\Models\Jnf;
+use App\Models\Recruiter;
+use App\Models\Company;
 use App\Enums\JnfStatus;
 use App\Exceptions\Api\ApiException;
 use Illuminate\Support\Facades\DB;
@@ -17,10 +19,19 @@ class AdminReviewService
 
         return [
             'summary_cards' => [
-                ['label' => 'Submitted', 'value' => $counts->get(JnfStatus::Submitted->value, 0)],
+                ['label' => 'Submitted JNFs', 'value' => $counts->get(JnfStatus::Submitted->value, 0)],
                 ['label' => 'Under Review', 'value' => $counts->get(JnfStatus::UnderReview->value, 0)],
-                ['label' => 'Approved', 'value' => $counts->get(JnfStatus::Approved->value, 0)],
+                ['label' => 'Approved JNFs', 'value' => $counts->get(JnfStatus::Approved->value, 0)],
+                ['label' => 'Total Recruiters', 'value' => Recruiter::count()],
+                ['label' => 'Total Companies', 'value' => Company::count()],
             ],
+            'stats' => [
+                'total_recruiters' => Recruiter::count(),
+                'total_companies' => Company::count(),
+                'total_jnfs' => Jnf::where('status', '!=', JnfStatus::Draft->value)->count(),
+                'approved_jnfs' => $counts->get(JnfStatus::Approved->value, 0),
+                'pending_jnfs' => $counts->get(JnfStatus::Submitted->value, 0) + $counts->get(JnfStatus::UnderReview->value, 0),
+            ]
         ];
     }
 
