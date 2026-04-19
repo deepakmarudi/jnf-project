@@ -3,19 +3,15 @@
 import { useState } from "react";
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
-import PublicHeader from "@/components/layout/public-header";
+import Container from "@mui/material/Container";
 import {
-  portalContact,
   portalHighlights,
-  portalLinks,
   recruitmentProcessSteps,
 } from "./data/home-content";
 import PortalAccessDialog from "./components/portal-access-dialog";
-import PortalContactCard from "./components/portal-contact-card";
 import PortalFooter from "./components/portal-footer";
 import PortalHighlightsSection from "./components/portal-highlights-section";
 import PortalHomeHero from "./components/portal-home-hero";
-import PortalLinksCard from "./components/portal-links-card";
 import PortalProcessSection from "./components/portal-process-section";
 
 export default function PortalHomePage() {
@@ -26,23 +22,16 @@ export default function PortalHomePage() {
 
   return (
     <>
-      <PublicHeader onAccessClick={openAccessDialog} />
-
-      <Stack spacing={{ xs: 5, md: 6 }}>
+      <Stack spacing={0}>
         <PortalHomeHero onAccessClick={openAccessDialog} />
-        <PortalHighlightsSection highlights={portalHighlights} />
-        <PortalProcessSection steps={recruitmentProcessSteps} />
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "minmax(0, 1fr) 360px" },
-            gap: 3,
-            alignItems: "stretch",
-          }}
-        >
-          <PortalLinksCard links={portalLinks} />
-          <PortalContactCard contact={portalContact} />
+        
+        <Box sx={{ width: "100%", bgcolor: "#f5f7fa" }}>
+          <Container maxWidth="lg" sx={{ py: { xs: 5, md: 8 } }}>
+            <Stack spacing={{ xs: 5, md: 6 }}>
+              <PortalHighlightsSection highlights={portalHighlights} />
+              <PortalProcessSection steps={recruitmentProcessSteps} />
+            </Stack>
+          </Container>
         </Box>
 
         <PortalFooter />

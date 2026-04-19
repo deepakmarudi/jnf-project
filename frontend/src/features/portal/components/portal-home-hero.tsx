@@ -3,6 +3,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
 import { instituteWebsiteUrl } from "../data/home-content";
 
 type PortalHomeHeroProps = Readonly<{
@@ -17,12 +18,9 @@ export default function PortalHomeHero({
       sx={{
         position: "relative",
         overflow: "hidden",
-        borderRadius: 4,
         minHeight: { xs: 440, md: 520 },
         display: "flex",
         alignItems: "center",
-        px: { xs: 3, md: 6 },
-        py: { xs: 4, md: 5 },
         backgroundColor: "#15345f",
       }}
     >
@@ -44,14 +42,14 @@ export default function PortalHomeHero({
         }}
       />
 
-      <Stack
-        spacing={2.25}
-        sx={{
-          position: "relative",
-          zIndex: 1,
-          maxWidth: 720,
-        }}
-      >
+      <Container maxWidth="lg" sx={{ position: "relative", zIndex: 1 }}>
+        <Stack
+          spacing={2.25}
+          sx={{
+            maxWidth: 720,
+            py: { xs: 6, md: 8 },
+          }}
+        >
         <Typography
           variant="overline"
           sx={{
@@ -111,7 +109,7 @@ export default function PortalHomeHero({
             Visit Institute Website
           </Button>
         </Stack>
-      </Stack>
+      </Container>
     </Box>
   );
 }

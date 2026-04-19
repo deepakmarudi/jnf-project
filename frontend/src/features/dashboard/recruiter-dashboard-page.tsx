@@ -12,7 +12,6 @@ import { mapBackendJnfCoreToRecord } from "@/features/jnf/lib/jnf-mappers";
 import type { JnfRecord } from "@/features/jnf/types";
 import { signOut } from "next-auth/react";
 import { routes } from "@/lib/routes";
-import DashboardQuickActions from "./components/dashboard-quick-actions";
 import DashboardReminders from "./components/dashboard-reminders";
 import DashboardRecentJnfs from "./components/dashboard-recent-jnfs";
 import DashboardSummaryCards from "./components/dashboard-summary-cards";
@@ -88,8 +87,6 @@ export default function RecruiterDashboardPage() {
             </Box>
           </Typography>
         </Stack>
-
-        <DashboardQuickActions />
 
         <DashboardSummaryCards summary={summary} />
 

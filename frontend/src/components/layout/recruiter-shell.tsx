@@ -1,5 +1,4 @@
 import Box from "@mui/material/Box";
-import RecruiterSidebar from "./recruiter-sidebar";
 import RecruiterTopbar from "./recruiter-topbar";
 
 type RecruiterShellProps = Readonly<{
@@ -11,27 +10,23 @@ export default function RecruiterShell({ children }: RecruiterShellProps) {
     <Box
       sx={{
         minHeight: "100vh",
-        display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "230px minmax(0, 1fr)" },
+        display: "flex",
+        flexDirection: "column",
         backgroundColor: "background.default",
       }}
     >
+      <RecruiterTopbar />
       <Box
+        component="main"
         sx={{
-          display: { xs: "none", md: "block" },
-          borderRight: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.paper",
+          flexGrow: 1,
+          p: { xs: 2, md: 4 },
+          maxWidth: "1400px",
+          width: "100%",
+          mx: "auto",
         }}
       >
-        <RecruiterSidebar />
-      </Box>
-
-      <Box sx={{ minWidth: 0, minHeight: "100vh" }}>
-        <RecruiterTopbar />
-        <Box component="main" sx={{ p: { xs: 2, md: 3 } }}>
-          {children}
-        </Box>
+        {children}
       </Box>
     </Box>
   );

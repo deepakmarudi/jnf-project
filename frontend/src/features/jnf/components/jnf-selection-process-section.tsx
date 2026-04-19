@@ -209,7 +209,7 @@ export default function JnfSelectionProcessSection({
               label="Date & Time of the Round"
               required
               type="datetime-local"
-              value={round.scheduled_at}
+              value={round.scheduled_at ? String(round.scheduled_at).replace(' ', 'T').substring(0, 16) : ""}
               onChange={(event) =>
                 handleUpdateRound(round.id, "scheduled_at", event.target.value)
               }

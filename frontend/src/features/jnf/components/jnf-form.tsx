@@ -163,7 +163,11 @@ export default function JnfForm({
         <TextField
           label="Application Deadline"
           type="date"
-          value={form.additional_details.application_deadline}
+          value={
+            form.additional_details.application_deadline
+              ? String(form.additional_details.application_deadline).substring(0, 10)
+              : ""
+          }
           onChange={(event) =>
             setForm((current) => ({
               ...current,

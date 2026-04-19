@@ -26,15 +26,6 @@ export default function AdminLoginPageHeader() {
     >
       <Stack direction="row" spacing={1.5} alignItems="center">
         <Button
-          variant="text"
-          onClick={() => {
-            window.history.back();
-          }}
-          sx={{ px: 0 }}
-        >
-          Back
-        </Button>
-        <Button
           component={Link}
           href={routes.public.home}
           variant="text"

@@ -114,7 +114,11 @@ export default function JnfDeclarationSection({
         <TextField
           label="Declaration Date"
           type="date"
-          value={form.declaration.declaration_date}
+          value={
+            form.declaration.declaration_date
+              ? String(form.declaration.declaration_date).substring(0, 10)
+              : ""
+          }
           onChange={(event) =>
             setForm((current) => ({
               ...current,
