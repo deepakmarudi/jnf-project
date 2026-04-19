@@ -1,10 +1,13 @@
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
 import SectionCard from "@/components/ui/section-card";
 import type { JnfFieldErrors } from "../lib/jnf-validation";
 import type { JnfRecord } from "../types";
 import JnfFormGrid from "./jnf-form-grid";
+import { jnfFunctionalAreaOptions } from "../data/jnf-functional-areas";
 
 type JnfJobProfileSectionProps = Readonly<{
   form: JnfRecord;
@@ -85,8 +88,8 @@ export default function JnfJobProfileSection({
         />
 
         <TextField
+          select
           label="Department / Function"
-          placeholder="e.g. Engineering, Analytics, Product"
           value={form.department_or_function}
           onChange={(event) =>
             setForm((current) => ({
@@ -95,7 +98,14 @@ export default function JnfJobProfileSection({
             }))
           }
           fullWidth
-        />
+        >
+          {jnfFunctionalAreaOptions.map((area) => (
+            <MenuItem key={area} value={area}>
+              {area}
+            </MenuItem>
+          ))}
+          <MenuItem value="Other">Other</MenuItem>
+        </TextField>
 
         <TextField
           select

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Divider from "@mui/material/Divider";
@@ -52,13 +53,20 @@ export default function RecruiterSidebar() {
     setIsLoggingOut(true);
 
     try {
+      // First tell the backend to revoke tokens
       await logoutRecruiter();
     } catch {
-      // Clear local auth state even if the logout request fails.
+      // Ignore backend logout errors to ensure client-side logout proceeds
     } finally {
+      // Clear manual tokens if any
       clearAuthToken();
       clearRecruiterSessionSnapshot();
-      router.replace(routes.public.home);
+      
+      // Use NextAuth signOut for absolute session termination and redirect
+      await signOut({ 
+        callbackUrl: routes.public.home,
+        redirect: true 
+      });
     }
   }
 

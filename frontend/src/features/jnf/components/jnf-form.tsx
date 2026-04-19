@@ -46,6 +46,7 @@ export default function JnfForm({
     useState<JnfSectionKey | false>("company_summary");
   const [uploadingJd, setUploadingJd] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [touchedSections, setTouchedSections] = useState<Partial<Record<JnfSectionKey, boolean>>>({});
 
   const handleJdUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -82,6 +83,11 @@ export default function JnfForm({
   }
 
   function handleSectionSave(sectionKey: JnfSectionKey) {
+    setTouchedSections((current) => ({
+      ...current,
+      [sectionKey]: true,
+    }));
+
     if (!sectionValidity[sectionKey]) {
       return;
     }
@@ -95,6 +101,12 @@ export default function JnfForm({
     const nextSection = jnfSectionOrder[currentIndex + 1] ?? false;
     setExpandedSection(nextSection);
   }
+
+  const getSectionErrors = (sectionKey: JnfSectionKey) => {
+    return (touchedSections[sectionKey] || completedSections[sectionKey]) 
+      ? fieldErrors 
+      : {};
+  };
 
   function renderAdditionalDetails() {
     return (
@@ -236,7 +248,7 @@ export default function JnfForm({
               Fast-Track with a Job Description
             </Typography>
             <Typography variant="body2" color="primary.800">
-              Already have a PDF Job Description? Upload it now!
+              Already have a PDF Job Description? Upload it now! (Max 10MB)
             </Typography>
           </div>
           
@@ -262,9 +274,21 @@ export default function JnfForm({
             </Button>
             
             {form.jd_pdf_path && (
-              <Typography variant="body2" color="success.main" fontWeight={500}>
-                ✓ Successfully Attached: {form.jd_pdf_path.split("/").pop()}
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                <Typography variant="body2" color="success.main" fontWeight={500}>
+                  ✓ Attached: {form.jd_pdf_path.split("/").pop()}
+                </Typography>
+                <Button 
+                  size="small" 
+                  component="a" 
+                  href={form.jd_pdf_path} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  sx={{ textTransform: 'none', fontWeight: 600 }}
+                >
+                  View File
+                </Button>
+              </Stack>
             )}
           </Stack>
           
@@ -302,7 +326,7 @@ export default function JnfForm({
         <JnfJobProfileSection
           form={form}
           setForm={setForm}
-          fieldErrors={fieldErrors}
+          fieldErrors={getSectionErrors("job_profile") as JnfFieldErrors}
           embedded
         />
         {renderAdditionalDetails()}
@@ -320,7 +344,7 @@ export default function JnfForm({
         <JnfContactsSection
           form={form}
           setForm={setForm}
-          fieldErrors={fieldErrors}
+          fieldErrors={getSectionErrors("contacts") as JnfFieldErrors}
           embedded
         />
       </JnfSectionAccordion>
@@ -337,7 +361,7 @@ export default function JnfForm({
         <JnfEligibilitySection
           form={form}
           setForm={setForm}
-          fieldErrors={fieldErrors}
+          fieldErrors={getSectionErrors("eligibility") as JnfFieldErrors}
           embedded
         />
       </JnfSectionAccordion>
@@ -354,7 +378,7 @@ export default function JnfForm({
         <JnfSalarySection
           form={form}
           setForm={setForm}
-          fieldErrors={fieldErrors}
+          fieldErrors={getSectionErrors("salary") as JnfFieldErrors}
           embedded
         />
       </JnfSectionAccordion>
@@ -373,7 +397,7 @@ export default function JnfForm({
         <JnfSelectionProcessSection
           form={form}
           setForm={setForm}
-          fieldErrors={fieldErrors}
+          fieldErrors={getSectionErrors("selection_process") as JnfFieldErrors}
           embedded
         />
       </JnfSectionAccordion>
@@ -390,7 +414,7 @@ export default function JnfForm({
         <JnfDeclarationSection
           form={form}
           setForm={setForm}
-          fieldErrors={fieldErrors}
+          fieldErrors={getSectionErrors("declaration") as JnfFieldErrors}
           embedded
         />
       </JnfSectionAccordion>

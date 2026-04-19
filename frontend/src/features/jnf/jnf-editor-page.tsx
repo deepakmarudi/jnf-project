@@ -6,6 +6,8 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
 import PageContainer from "@/components/layout/page-container";
 import ErrorState from "@/components/ui/error-state";
 import LoadingState from "@/components/ui/loading-state";
@@ -27,6 +29,7 @@ import {
 import { fetchJnfFullRecord, saveJnfFullRecord } from "./lib/jnf-orchestrator";
 import { submitJnf } from "./lib/jnf-api";
 import { emptyJnfRecord, type JnfRecord } from "./types";
+import { useAutoSave } from "./hooks/use-auto-save";
 
 type JnfEditorPageProps = Readonly<{
   mode: "create" | "edit";
@@ -48,6 +51,39 @@ export default function JnfEditorPage({
   const [, setIsSaving] = useState(false);
   const [pageError, setPageError] = useState("");
   const [infoMessage, setInfoMessage] = useState("");
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+
+  const { status, lastSavedAt } = useAutoSave({
+    data: form,
+    enabled: !isLoading && !isSessionLoading && form !== emptyJnfRecord,
+    debounceMs: 1500,
+    onSave: async (currentForm) => {
+      // Sync to local storage as fallback
+      if (mode === 'create') {
+        localStorage.setItem('jnf_new_draft', JSON.stringify(currentForm));
+      }
+
+      // Don't auto-save if we are already in a manual save process
+      setIsAutoSaving(true);
+      try {
+        const savedRecord = await saveJnfFullRecord(currentForm);
+        
+        // Clear local storage on successful backend save
+        localStorage.removeItem('jnf_new_draft');
+
+        // If we were in create mode and now have an ID, transition to edit mode
+        if (mode === "create" && savedRecord.id) {
+          // Replace URL without reloading to avoid losing focus if possible
+          // But actually, Next.js push/replace is better for state sync
+          router.replace(`${routes.recruiter.jnfs}/${savedRecord.id}`);
+        }
+        
+        setForm(savedRecord);
+      } finally {
+        setIsAutoSaving(false);
+      }
+    },
+  });
 
   useEffect(() => {
     if (isSessionLoading || !session?.is_logged_in) {
@@ -87,8 +123,18 @@ export default function JnfEditorPage({
     }
 
     if (mode === "create") {
-      setForm(emptyJnfRecord);
-      setCompletedSections(initialJnfCompletedSections);
+      const savedDraft = typeof window !== 'undefined' ? localStorage.getItem('jnf_new_draft') : null;
+      if (savedDraft) {
+        try {
+          const parsed = JSON.parse(savedDraft);
+          setForm(parsed);
+          setCompletedSections(getJnfSectionValidity(parsed, companyProfile));
+        } catch {
+          setForm(emptyJnfRecord);
+        }
+      } else {
+        setForm(emptyJnfRecord);
+      }
       setIsLoading(false);
       return;
     }
@@ -233,6 +279,20 @@ export default function JnfEditorPage({
     <PageContainer
       title={mode === "create" ? "Create New JNF" : "Edit JNF"}
       description="Complete and save each accordion section one by one before submitting the JNF."
+      action={
+        <Stack direction="row" alignItems="center" spacing={1}>
+          {status === "saving" || isAutoSaving ? (
+            <CircularProgress size={16} color="inherit" />
+          ) : null}
+          <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 500 }}>
+            {status === "saving" || isAutoSaving
+              ? "Auto-saving..."
+              : status === "saved" && lastSavedAt
+              ? `Last saved at ${lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              : "Draft ready"}
+          </Typography>
+        </Stack>
+      }
     >
       <Stack spacing={3}>
         {infoMessage ? <Alert severity="info">{infoMessage}</Alert> : null}

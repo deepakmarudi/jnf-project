@@ -2,10 +2,10 @@ import Autocomplete from "@mui/material/Autocomplete";
 import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
+import Typography from "@mui/material/Typography";
+import CircularProgress from "@mui/material/CircularProgress";
 import SectionCard from "@/components/ui/section-card";
 import {
-  getBranchOptionsForProgrammeAndDegrees,
-  getDegreeOptionsForProgramme,
   jnfProgrammeOptions,
   normalizeSelectionWithAll,
   type JnfEligibilityOption,
@@ -13,6 +13,7 @@ import {
 import type { JnfFieldErrors } from "../lib/jnf-validation";
 import type { JnfRecord } from "../types";
 import JnfFormGrid from "./jnf-form-grid";
+import { useMasterData } from "../hooks/use-master-data";
 
 type JnfEligibilitySectionProps = Readonly<{
   form: JnfRecord;
@@ -46,17 +47,48 @@ export default function JnfEligibilitySection({
   fieldErrors,
   embedded = false,
 }: JnfEligibilitySectionProps) {
-  const degreeOptions = getDegreeOptionsForProgramme(
-    form.eligibility.eligible_programme
-  );
+  const { programmes, disciplines, isLoading } = useMasterData();
 
-  const branchOptions = getBranchOptionsForProgrammeAndDegrees(
-    form.eligibility.eligible_programme,
-    form.eligibility.eligible_degree_ids
-  );
+  const degreeOptions: JnfEligibilityOption[] = isLoading
+    ? []
+    : [
+        { value: "all", label: "All" },
+        ...programmes
+          .filter((p) => {
+            if (form.eligibility.eligible_programme === "ug") return p.level === "ug";
+            if (form.eligibility.eligible_programme === "pg") return p.level === "pg";
+            if (form.eligibility.eligible_programme === "both") return true;
+            return false;
+          })
+          .reduce((acc, p) => {
+            // De-duplicate by name to prevent React key collisions
+            if (!acc.some(item => item.label === p.name)) {
+              acc.push({ value: String(p.id), label: p.name });
+            }
+            return acc;
+          }, [] as JnfEligibilityOption[]),
+      ];
+
+  const branchOptions: JnfEligibilityOption[] = isLoading
+    ? []
+    : [
+        { value: "all", label: "All" },
+        ...disciplines.reduce((acc, d) => {
+          if (!acc.some(item => item.label === d.name)) {
+            acc.push({ value: String(d.id), label: d.name });
+          }
+          return acc;
+        }, [] as JnfEligibilityOption[]),
+      ];
 
   const content = (
     <Stack spacing={2.5}>
+      {isLoading && (
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ color: 'primary.main' }}>
+          <CircularProgress size={16} color="inherit" />
+          <Typography variant="caption">Updating curriculum data...</Typography>
+        </Stack>
+      )}
       <JnfFormGrid>
         <TextField
           label="Eligible Batch"

@@ -38,39 +38,63 @@ class EligibilityService
         }
 
         // 1. Rule
-        if (isset($payload['rule_fields'])) {
-            JnfEligibilityRule::updateOrCreate(
-                ['jnf_id' => $jnfId],
-                $payload['rule_fields']
-            );
-        }
+        JnfEligibilityRule::updateOrCreate(
+            ['jnf_id' => $jnfId],
+            [
+                'minimum_cgpa' => $payload['minimum_cgpa'] ?? null,
+                'backlogs_allowed' => $payload['backlogs_allowed'] ?? false,
+                'max_backlogs' => $payload['max_backlogs'] ?? null,
+                'high_school_percentage_criterion' => $payload['high_school_percentage_criterion'] ?? null,
+                'gender_filter' => $payload['gender_filter'] ?? 'all',
+                'slp_requirement' => $payload['slp_requirement'] ?? null,
+                'phd_allowed' => $payload['phd_allowed'] ?? false,
+                'phd_department_requirement' => $payload['phd_department_requirement'] ?? null,
+                'ma_dhss_allowed' => $payload['ma_dhss_allowed'] ?? false,
+                'other_specific_requirements' => $payload['other_specific_requirements'] ?? null,
+            ]
+        );
 
         // 2. Programmes
-        if (isset($payload['programmes'])) {
-            $formatted = [];
-
-            foreach ($payload['programmes'] as $prog) {
-                $formatted[$prog['id']] = [
-                    'is_eligible' => $prog['is_eligible'] ?? true,
-                    'min_cpi_for_programme' => $prog['min_cpi'] ?? null,
-                ];
+        if (isset($payload['programme_rows'])) {
+            $hasAll = collect($payload['programme_rows'])->contains('programme_id', 'all');
+            
+            if ($hasAll) {
+                $allIds = \App\Models\Programme::where('is_active', true)->pluck('id');
+                $formatted = $allIds->mapWithKeys(fn($id) => [$id => ['is_eligible' => true]])->toArray();
+            } else {
+                $formatted = [];
+                foreach ($payload['programme_rows'] as $row) {
+                    $formatted[$row['programme_id']] = [
+                        'is_eligible' => $row['is_eligible'] ?? true,
+                        'min_cpi_for_programme' => $row['min_cpi_for_programme'] ?? null,
+                    ];
+                }
             }
-
             $jnf->eligibleProgrammes()->sync($formatted);
         }
 
         // 3. Disciplines
-        if (isset($payload['disciplines'])) {
-            $formatted = [];
+        if (isset($payload['discipline_rows'])) {
+            $hasAll = collect($payload['discipline_rows'])->contains('discipline_id', 'all');
 
-            foreach ($payload['disciplines'] as $disc) {
-                $formatted[$disc['id']] = [
-                    'programme_id' => $disc['programme_id'],
-                    'is_eligible' => $disc['is_eligible'] ?? true,
-                    'min_cpi_for_discipline' => $disc['min_cpi'] ?? null,
-                ];
+            if ($hasAll) {
+                $allIds = \App\Models\Discipline::where('is_active', true)->pluck('id');
+                $formatted = $allIds->mapWithKeys(fn($id) => [
+                    $id => [
+                        'programme_id' => $payload['discipline_rows'][0]['programme_id'] ?? null, 
+                        'is_eligible' => true
+                    ]
+                ])->toArray();
+            } else {
+                $formatted = [];
+                foreach ($payload['discipline_rows'] as $row) {
+                    $formatted[$row['discipline_id']] = [
+                        'programme_id' => $row['programme_id'],
+                        'is_eligible' => $row['is_eligible'] ?? true,
+                        'min_cpi_for_discipline' => $row['min_cpi_for_discipline'] ?? null,
+                    ];
+                }
             }
-
             $jnf->eligibleDisciplines()->sync($formatted);
         }
 
