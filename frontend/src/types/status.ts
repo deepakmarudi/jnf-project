@@ -1,10 +1,10 @@
 export type JnfStatus =
   | "draft"
   | "submitted"
-  // | "under_review"
+  | "under_review"
   | "changes_requested"
   | "approved"
   | "rejected"
-  // | "closed";
+  | "closed";
 
 export type RecruiterStatus = "pending" | "active" | "blocked";

@@ -21,13 +21,18 @@ import type {
 } from "./jnf-api";
 
 function normalizeStatus(status: string): JnfStatus {
-  if (
-    status === "draft" ||
-    status === "submitted" ||
-    status === "changes_requested" ||
-    status === "approved"
-  ) {
-    return status;
+  const validStatuses: JnfStatus[] = [
+    "draft",
+    "submitted",
+    "under_review",
+    "changes_requested",
+    "approved",
+    "rejected",
+    "closed"
+  ];
+
+  if (validStatuses.includes(status as JnfStatus)) {
+    return status as JnfStatus;
   }
 
   return "draft";

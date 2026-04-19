@@ -1,32 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+import LoadingState from "@/components/ui/loading-state";
+import useAdminSession from "@/features/auth/hooks/use-admin-session";
+import { routes } from "@/lib/routes";
 
 type AdminLayoutProps = Readonly<{
   children: React.ReactNode;
 }>;
 
-const ADMIN_SESSION_KEY = "admin-authenticated";
-
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const { session, isLoading } = useAdminSession();
 
   useEffect(() => {
-    const hasAdminSession = window.localStorage.getItem(ADMIN_SESSION_KEY) === "true";
-
-    if (!hasAdminSession) {
-      router.replace("/admin/login");
+    if (isLoading) {
       return;
     }
 
-    setIsAuthorized(true);
-  }, [router]);
+    if (!session?.is_logged_in) {
+      router.replace(routes.public.adminLogin);
+      return;
+    }
+  }, [isLoading, router, session]);
 
-  if (!isAuthorized) {
+  if (isLoading) {
     return (
       <Box
         sx={{
@@ -36,10 +36,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           justifyContent: "center",
         }}
       >
-        <CircularProgress />
+        <LoadingState message="Checking admin access..." />
       </Box>
     );
   }
 
-  return <Box>{children}</Box>;
+  if (!session?.is_logged_in) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <LoadingState message="Redirecting to admin login..." />
+      </Box>
+    );
+  }
+
+  return <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>{children}</Box>;
 }

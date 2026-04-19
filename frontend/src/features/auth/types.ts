@@ -108,6 +108,13 @@ export type RecruiterLoginResponse = {
   token_type: "Bearer";
 };
 
+export type AdminSession = {
+  admin_id: number;
+  admin_name: string;
+  admin_email: string;
+  is_logged_in: boolean;
+};
+
 export type RecruiterMeResponse = {
   recruiter: {
     id: number;

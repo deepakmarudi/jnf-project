@@ -48,6 +48,14 @@ function getStageSummary(item: JnfRecord) {
     return "Rejected by admin.";
   }
 
+  if (item.status === "under_review") {
+    return "Admin is currently reviewing the details.";
+  }
+
+  if (item.status === "closed") {
+    return "The placement process for this JNF has concluded.";
+  }
+
   return "JNF status available.";
 }
 

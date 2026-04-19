@@ -10,9 +10,11 @@ type StatusChipProps = Readonly<{
 const statusLabelMap: Record<StatusValue, string> = {
   draft: "Draft",
   submitted: "Submitted",
+  under_review: "Under Review",
   changes_requested: "Changes Requested",
   approved: "Approved",
   rejected: "Rejected",
+  closed: "Closed",
   pending: "Pending",
   active: "Active",
   blocked: "Blocked",
@@ -24,9 +26,11 @@ const statusColorMap: Record<
 > = {
   draft: "default",
   submitted: "info",
+  under_review: "primary",
   changes_requested: "warning",
   approved: "success",
   rejected: "error",
+  closed: "default",
   pending: "warning",
   active: "success",
   blocked: "error",
