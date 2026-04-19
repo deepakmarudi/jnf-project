@@ -25,10 +25,10 @@ class MasterDataSeeder extends Seeder
 
         // 2. Disciplines
         DB::table('disciplines')->insert([
-            ['programme_id' => $ugId, 'name' => 'Computer Science and Engineering', 'short_name' => 'CSE', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
-            ['programme_id' => $ugId, 'name' => 'Electrical Engineering', 'short_name' => 'EE', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
-            ['programme_id' => $ugId, 'name' => 'Mechanical Engineering', 'short_name' => 'ME', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
-            ['programme_id' => $pgId, 'name' => 'Artificial Intelligence', 'short_name' => 'AI', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Computer Science and Engineering', 'short_name' => 'CSE', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Electrical Engineering', 'short_name' => 'EE', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Mechanical Engineering', 'short_name' => 'ME', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
+            ['name' => 'Artificial Intelligence', 'short_name' => 'AI', 'is_active' => true, 'created_at' => $now, 'updated_at' => $now],
         ]);
 
         // 3. Skills

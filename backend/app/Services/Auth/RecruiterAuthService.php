@@ -58,7 +58,7 @@ class RecruiterAuthService
             'hq_city' => $companyData->get('hq_city'),
             'nature_of_business' => $companyData->get('nature_of_business'),
             'description' => $companyData->get('description'),
-            'is_mnc' => clone $companyData->get('is_mnc', false) ? true : false,
+            'is_mnc' => (bool) $companyData->get('is_mnc', false),
         ]);
         
         $company->save();
