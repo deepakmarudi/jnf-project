@@ -43,13 +43,14 @@ export const initialCompanyProfile: CompanyProfile = {
 };
 
 export function isCompanyProfileComplete(profile: CompanyProfile) {
+  if (!profile) return false;
   return Boolean(
-    profile.name.trim() &&
-      profile.website.trim() &&
-      profile.postal_address.trim() &&
-      profile.sector.trim() &&
-      profile.category_or_org_type.trim() &&
-      profile.hq_country.trim() &&
-      profile.hq_city.trim()
+    (profile.name ?? "").trim() &&
+      (profile.website ?? "").trim() &&
+      (profile.postal_address ?? "").trim() &&
+      (profile.sector ?? "").trim() &&
+      (profile.category_or_org_type ?? "").trim() &&
+      (profile.hq_country ?? "").trim() &&
+      (profile.hq_city ?? "").trim()
   );
 }

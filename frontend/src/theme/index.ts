@@ -101,17 +101,34 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 10,
-          minHeight: 42,
-          paddingInline: 18,
+          borderRadius: 14,
+          minHeight: 46,
+          paddingInline: 24,
+          transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
+          textTransform: "none",
+          fontWeight: 600,
+          letterSpacing: "0.01em",
+          "&:hover": {
+            transform: "translateY(-1px)",
+            boxShadow: "0 6px 20px rgba(22, 58, 107, 0.12)",
+          },
+          "&:active": {
+            transform: "translateY(1px)",
+          },
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          border: "1px solid #d8e0ea",
-          boxShadow: "0 10px 30px rgba(16, 35, 61, 0.06)",
+          borderRadius: 16,
+          border: "1px solid rgba(216, 224, 234, 0.6)",
+          boxShadow: "0 12px 40px rgba(16, 35, 61, 0.04)",
+          transition: "box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out",
+          "&:hover": {
+            boxShadow: "0 16px 50px rgba(16, 35, 61, 0.08)",
+            borderColor: "rgba(216, 224, 234, 0.9)",
+          },
         },
       },
     },
@@ -119,12 +136,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
+          borderRadius: 16,
         },
       },
     },
     MuiTextField: {
       defaultProps: {
-        size: "small",
+        size: "medium",
         variant: "outlined",
       },
     },
@@ -132,14 +150,40 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: "#ffffff",
+          borderRadius: 12,
+          transition: "all 0.2s ease-in-out",
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#a6b9cc",
+          },
+          "&.Mui-focused": {
+            boxShadow: "0 0 0 4px rgba(22, 58, 107, 0.1)",
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderWidth: "1px",
+          },
+        },
+        notchedOutline: {
+          borderColor: "#d8e0ea",
+          transition: "border-color 0.2s ease-in-out",
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
+          backgroundColor: "rgba(255, 255, 255, 0.85)",
+          backdropFilter: "blur(12px)",
           boxShadow: "none",
-          borderBottom: "1px solid #d8e0ea",
+          borderBottom: "1px solid rgba(216, 224, 234, 0.6)",
+          color: "#10233d",
+        },
+      },
+    },
+    MuiAlert: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
         },
       },
     },

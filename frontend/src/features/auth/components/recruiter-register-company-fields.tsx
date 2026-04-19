@@ -198,22 +198,6 @@ export default function RecruiterRegisterCompanyFields({
         fullWidth
       />
 
-      <TextField
-        label="Industry Tag IDs"
-        placeholder="1, 2, 3"
-        value={industryTagsInput}
-        onChange={(event) =>
-          onCompanyFieldChange(
-            "industry_tag_ids",
-            event.target.value
-              .split(",")
-              .map((item) => item.trim())
-              .filter(Boolean)
-          )
-        }
-        helperText="Use numeric tag ids for now, comma separated."
-        fullWidth
-      />
 
       <FormControlLabel
         control={

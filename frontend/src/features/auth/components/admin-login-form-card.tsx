@@ -15,7 +15,6 @@ import Typography from "@mui/material/Typography";
 import { routes } from "@/lib/routes";
 import { adminLoginContent } from "../data/admin-login-content";
 import PasswordVisibilityIcon from "./password-visibility-icon";
-import Link from "next/link";
 import Alert from "@mui/material/Alert";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -90,7 +89,12 @@ export default function AdminLoginFormCard() {
           justifyContent: "center",
         }}
       >
-        <Stack spacing={2.5} sx={{ width: "100%", maxWidth: 360, mx: "auto" }} component="form" onSubmit={handleSubmit}>
+        <Stack
+          spacing={2.5}
+          sx={{ width: "100%", maxWidth: 360, mx: "auto" }}
+          component="form"
+          onSubmit={handleSubmit}
+        >
           <Stack spacing={1} sx={{ textAlign: "center" }}>
             <Typography variant="h4">{adminLoginContent.formTitle}</Typography>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>

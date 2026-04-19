@@ -1,22 +1,8 @@
 import type { JnfRecord } from "../types";
 import {
-  createJnfContact,
   createJnfCore,
-  createJnfRound,
-  deleteJnfContact,
-  deleteJnfRound,
   getJnfCore,
-  getJnfDeclaration,
-  getJnfEligibility,
-  getJnfSalary,
-  listJnfContacts,
-  listJnfRounds,
-  updateJnfContact,
   updateJnfCore,
-  updateJnfRound,
-  upsertJnfDeclaration,
-  upsertJnfEligibility,
-  upsertJnfSalary,
 } from "./jnf-api";
 import {
   mapBackendContactsToRecord,
@@ -35,125 +21,61 @@ import {
 
 export async function saveJnfFullRecord(record: JnfRecord): Promise<JnfRecord> {
   const isCreation = !record.id || isNaN(Number(record.id));
-  const corePayload = mapRecordCoreToBackendPayload(record);
+  
+  const payload = {
+    ...mapRecordCoreToBackendPayload(record),
+    contacts: record.contacts.map(mapContactToBackendPayload),
+    eligibility: mapRecordEligibilityToBackendPayload(record),
+    salary_packages: mapRecordSalaryToBackendPayload(record).salary_packages,
+    selection_rounds: record.selection_process.rounds.map(mapRoundToBackendPayload),
+    declaration: mapRecordDeclarationToBackendPayload(record),
+  };
 
-  // 1. CORE JNF
-  let coreResponse;
+  let response;
   if (isCreation) {
-    coreResponse = await createJnfCore(corePayload);
+    // If it's pure creation, first we make the core shell to get the ID
+    response = await createJnfCore(payload);
+    if (!response.data.jnf.id) throw new Error("Failed to create JNF shell.");
+    
+    // Immediately stream the payload to hydration
+    response = await updateJnfCore(response.data.jnf.id, payload);
   } else {
-    coreResponse = await updateJnfCore(record.id, corePayload);
+    // Standard massive monolithic Transact Upsert
+    response = await updateJnfCore(record.id, payload);
   }
 
-  const jnfId = coreResponse.data.jnf.id;
-  const stringJnfId = String(jnfId);
-
-  // 2. ELIGIBILITY
-  await upsertJnfEligibility(
-    jnfId,
-    mapRecordEligibilityToBackendPayload(record)
-  );
-
-  // 3. SALARY
-  await upsertJnfSalary(jnfId, mapRecordSalaryToBackendPayload(record));
-
-  // 4. DECLARATION
-  await upsertJnfDeclaration(
-    jnfId,
-    mapRecordDeclarationToBackendPayload(record)
-  );
-
-  // 5. CONTACTS SYNC
-  const existingContactsRes = await listJnfContacts(jnfId);
-  const existingContacts = existingContactsRes.data.contacts;
-  
-  // Create / Update
-  for (const contact of record.contacts) {
-    const payload = mapContactToBackendPayload(contact);
-    if (!contact.id || isNaN(Number(contact.id))) {
-      if (contact.email || contact.full_name) {
-        await createJnfContact(jnfId, payload);
-      }
-    } else {
-      await updateJnfContact(contact.id, payload);
-    }
-  }
-  
-  // Delete missing contacts
-  const targetContactIds = new Set(
-    record.contacts
-      .map((c) => c.id)
-      .filter((id) => id && !isNaN(Number(id)))
-      .map(Number)
-  );
-  for (const ec of existingContacts) {
-    if (!targetContactIds.has(ec.id)) {
-      await deleteJnfContact(ec.id);
-    }
-  }
-
-  // 6. ROUNDS SYNC
-  const existingRoundsRes = await listJnfRounds(jnfId);
-  const existingRounds = existingRoundsRes.data.selection_rounds;
-
-  // Create / Update
-  for (const round of record.selection_process.rounds) {
-    const payload = mapRoundToBackendPayload(round);
-    if (!round.id || isNaN(Number(round.id))) {
-      if (round.round_name) {
-        await createJnfRound(jnfId, payload);
-      }
-    } else {
-      await updateJnfRound(round.id, payload);
-    }
-  }
-
-  // Delete missing rounds
-  const targetRoundIds = new Set(
-    record.selection_process.rounds
-      .map((r) => r.id)
-      .filter((id) => id && !isNaN(Number(id)))
-      .map(Number)
-  );
-  for (const er of existingRounds) {
-    if (!targetRoundIds.has(er.id)) {
-      await deleteJnfRound(er.id);
-    }
-  }
-
-  // Finally, return the fully reconstructed record from DB
+  // Reload the deeply hydrated native response direct from Server
+  const stringJnfId = String(response.data.jnf.id);
   return fetchJnfFullRecord(stringJnfId);
 }
 
 export async function fetchJnfFullRecord(jnfId: string | number): Promise<JnfRecord> {
-  // Fetch massively in parallel to keep it blazing fast
-  const [
-    coreReq,
-    contactsReq,
-    eligibilityReq,
-    salaryReq,
-    roundsReq,
-    declarationReq,
-  ] = await Promise.all([
-    getJnfCore(jnfId),
-    listJnfContacts(jnfId),
-    getJnfEligibility(jnfId),
-    getJnfSalary(jnfId),
-    listJnfRounds(jnfId),
-    getJnfDeclaration(jnfId),
-  ]);
+  const coreReq = await getJnfCore(jnfId);
+  const data = coreReq.data.jnf;
 
-  const coreFields = mapBackendJnfCoreToRecord(coreReq.data.jnf);
+  const coreFields = mapBackendJnfCoreToRecord(data);
 
   return {
     ...coreFields,
-    contacts: mapBackendContactsToRecord(contactsReq.data.contacts),
-    eligibility: mapEligibilityResponseToRecord(eligibilityReq.data),
-    salary_details: mapBackendSalaryToRecord(salaryReq.data.salary_packages),
+    contacts: data.contacts ? mapBackendContactsToRecord(data.contacts) : [],
+    eligibility: data.eligibility_rule 
+      ? mapEligibilityResponseToRecord({ 
+          jnf_id: Number(jnfId), 
+          eligibility_rule: data.eligibility_rule, 
+          programme_rows: data.eligible_programmes ?? [], 
+          discipline_rows: data.eligible_disciplines ?? [] 
+        })
+      : mapEligibilityResponseToRecord({ 
+          jnf_id: Number(jnfId), 
+          eligibility_rule: null, 
+          programme_rows: [], 
+          discipline_rows: [] 
+        }),
+    salary_details: data.salary_packages ? mapBackendSalaryToRecord(data.salary_packages) : mapBackendSalaryToRecord([]),
     selection_process: {
       ...coreFields.selection_process,
-      rounds: mapBackendRoundsToRecord(roundsReq.data.selection_rounds),
+      rounds: data.selection_rounds ? mapBackendRoundsToRecord(data.selection_rounds) : [],
     },
-    declaration: mapBackendDeclarationToRecord(declarationReq.data.declaration),
+    declaration: mapBackendDeclarationToRecord(data.declaration ?? null),
   };
 }

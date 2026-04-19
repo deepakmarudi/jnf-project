@@ -96,7 +96,7 @@ class AdminReviewService
             ],
         ];
 
-        $current = $jnf->status;
+        $current = $jnf->status->value;
 
         if (! isset($allowedTransitions[$current]) ||
             ! in_array($newStatus, $allowedTransitions[$current])) {

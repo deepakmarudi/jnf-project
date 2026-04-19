@@ -6,6 +6,7 @@ import type {
 
 type SendOtpPayload = {
   recruiter_email: string;
+  recaptcha_token: string;
 };
 
 type VerifyOtpPayload = {
@@ -35,7 +36,10 @@ export async function sendRecruiterOtp(payload: SendOtpPayload) {
     "/auth/send-otp",
     {
       method: "POST",
-      body: payload,
+      body: {
+        ...payload,
+        recaptcha_token: payload.recaptcha_token,
+      },
     }
   );
 }
@@ -86,6 +90,12 @@ export async function getRecruiterMe() {
 
 export async function logoutRecruiter() {
   return fetchJson<LogoutResponse>("/auth/logout", {
+    method: "POST",
+  });
+}
+
+export async function logoutAdmin() {
+  return fetchJson<LogoutResponse>("/admin/auth/logout", {
     method: "POST",
   });
 }

@@ -10,6 +10,8 @@ import { getMyCompanyProfile } from "@/features/company/lib/company-api";
 import { listJnfs } from "@/features/jnf/lib/jnf-api";
 import { mapBackendJnfCoreToRecord } from "@/features/jnf/lib/jnf-mappers";
 import type { JnfRecord } from "@/features/jnf/types";
+import { signOut } from "next-auth/react";
+import { routes } from "@/lib/routes";
 import DashboardQuickActions from "./components/dashboard-quick-actions";
 import DashboardReminders from "./components/dashboard-reminders";
 import DashboardRecentJnfs from "./components/dashboard-recent-jnfs";
@@ -35,6 +37,11 @@ export default function RecruiterDashboardPage() {
           setJnfs(jnfsReq.data.jnfs.map(mapBackendJnfCoreToRecord));
         }
       } catch (error) {
+        const apiError = error as { message?: string };
+        if (apiError.message?.toLowerCase().includes("unauth")) {
+          await signOut({ callbackUrl: routes.public.login, redirect: true });
+          return;
+        }
         console.error("Dashboard failed to load fresh data", error);
       }
     }

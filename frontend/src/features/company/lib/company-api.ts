@@ -1,7 +1,7 @@
 import { fetchJson } from "@/lib/fetch-json";
 import type { CompanyProfile } from "../types";
 
-type CompanyApiResponse = CompanyProfile;
+type CompanyApiResponse = { company: CompanyProfile | null };
 
 function normalizeCompanyPayload(profile: CompanyProfile) {
   return {
@@ -20,9 +20,45 @@ function normalizeCompanyPayload(profile: CompanyProfile) {
   };
 }
 
-function normalizeCompanyResponse(data: CompanyApiResponse): CompanyProfile {
+function normalizeCompanyResponse(payload: CompanyApiResponse): CompanyProfile {
+  const data = payload.company;
+
+  if (!data) {
+    return {
+      name: "",
+      website: "",
+      postal_address: "",
+      sector: "",
+      logo_path: "",
+      category_or_org_type: "",
+      date_of_establishment: "",
+      social_media_url: "",
+      hq_country: "",
+      hq_city: "",
+      nature_of_business: "",
+      description: "",
+      is_mnc: false,
+      employee_count: "",
+      annual_turnover: "",
+      industry_tag_ids: [],
+    };
+  }
+
   return {
     ...data,
+    name: data.name ?? "",
+    website: data.website ?? "",
+    postal_address: data.postal_address ?? "",
+    sector: data.sector ?? "",
+    logo_path: data.logo_path ?? "",
+    category_or_org_type: data.category_or_org_type ?? "",
+    date_of_establishment: data.date_of_establishment ?? "",
+    social_media_url: data.social_media_url ?? "",
+    hq_country: data.hq_country ?? "",
+    hq_city: data.hq_city ?? "",
+    nature_of_business: data.nature_of_business ?? "",
+    description: data.description ?? "",
+    is_mnc: Boolean(data.is_mnc),
     employee_count:
       data.employee_count === null || data.employee_count === undefined
         ? ""

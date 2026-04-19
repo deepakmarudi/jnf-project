@@ -7,7 +7,7 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 
 type FetchJsonOptions = Omit<RequestInit, "body"> & {
-  body?: JsonObject;
+  body?: JsonObject | FormData;
 };
 
 export async function fetchJson<TData>(
@@ -17,21 +17,39 @@ export async function fetchJson<TData>(
   const { body, headers, ...restOptions } = options;
   const session = await getSession();
   const token = session?.user?.accessToken;
+  console.log("FETCH JSON BEADER TOKEN IS:", token);
 
-  const response = await fetch(buildApiUrl(path), {
-    ...restOptions,
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response: Response;
+
+  try {
+    const isFormData = body instanceof FormData;
+    response = await fetch(buildApiUrl(path), {
+      ...restOptions,
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+      body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
+    });
+  } catch (error) {
+    throw {
+      message:
+        error instanceof Error
+          ? error.message
+          : "Unable to reach the API server.",
+    } satisfies ApiErrorResponse;
+  }
 
   let responseJson:
+    | (ApiErrorResponse & {
+        error?: {
+          message?: string;
+          details?: Record<string, unknown>;
+        };
+      })
     | ApiSuccessResponse<TData>
-    | ApiErrorResponse
     | null = null;
 
   try {
@@ -43,11 +61,27 @@ export async function fetchJson<TData>(
   }
 
   if (!response.ok) {
-    throw (
-      responseJson ?? {
-        message: "Something went wrong while contacting the server.",
-      }
-    );
+    if (responseJson?.message) {
+      throw responseJson;
+    }
+
+    const errJson = responseJson as ApiErrorResponse & {
+      error?: { message?: string; details?: Record<string, unknown> };
+    };
+
+    if (errJson?.error?.message) {
+      throw {
+        message: errJson.error.message,
+        errors:
+          errJson.error.details && typeof errJson.error.details === "object"
+            ? (errJson.error.details as Record<string, string[]>)
+            : undefined,
+      } satisfies ApiErrorResponse;
+    }
+
+    throw {
+      message: `Request failed with status ${response.status}.`,
+    } satisfies ApiErrorResponse;
   }
 
   if (!responseJson) {

@@ -27,7 +27,11 @@ function FormGrid({ children }: Readonly<{ children: React.ReactNode }>) {
   );
 }
 
-function formatValue(value: string | boolean | string[]) {
+function formatValue(value: string | boolean | string[] | null | undefined) {
+  if (value === null || value === undefined) {
+    return "Not provided yet";
+  }
+
   if (Array.isArray(value)) {
     return value.length > 0 ? value.join(", ") : "Not provided yet";
   }
@@ -36,7 +40,7 @@ function formatValue(value: string | boolean | string[]) {
     return value ? "Yes" : "No";
   }
 
-  return value.trim() ? value : "Not provided yet";
+  return String(value).trim() ? value : "Not provided yet";
 }
 
 function ProfileField({

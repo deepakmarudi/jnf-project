@@ -21,7 +21,7 @@ class JnfPolicy
     public function delete(Recruiter $recruiter, Jnf $jnf): bool
     {
         return $this->view($recruiter, $jnf)
-            && data_get($jnf, 'status') === JnfStatus::Draft->value;
+            && data_get($jnf, 'status') === JnfStatus::Draft;
     }
 
     public function submit(Recruiter $recruiter, Jnf $jnf): bool
@@ -30,8 +30,8 @@ class JnfPolicy
             && in_array(
                 data_get($jnf, 'status'),
                 [
-                    JnfStatus::Draft->value,
-                    JnfStatus::ChangesRequested->value,
+                    JnfStatus::Draft,
+                    JnfStatus::ChangesRequested,
                 ],
                 true
             );

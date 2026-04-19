@@ -4,7 +4,6 @@ export type RecruiterSession = {
   recruiter_email: string;
   company_id: number | null;
   company_name: string | null;
-  company_profile_completed: boolean;
   is_logged_in: boolean;
 };
 

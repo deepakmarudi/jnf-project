@@ -223,19 +223,6 @@ export default function JnfJobProfileSection({
           helperText="Enter comma-separated skills."
           fullWidth
         />
-
-        <TextField
-          label="JD PDF Path"
-          placeholder="/uploads/jd.pdf"
-          value={form.jd_pdf_path}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              jd_pdf_path: event.target.value,
-            }))
-          }
-          fullWidth
-        />
       </JnfFormGrid>
 
       <TextField

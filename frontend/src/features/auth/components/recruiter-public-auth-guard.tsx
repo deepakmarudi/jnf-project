@@ -25,11 +25,7 @@ export default function RecruiterPublicAuthGuard({
       return;
     }
 
-    router.replace(
-      session.company_profile_completed
-        ? routes.recruiter.dashboard
-        : routes.recruiter.company
-    );
+    router.replace(routes.recruiter.dashboard);
   }, [isLoading, router, session]);
 
   if (isLoading) {

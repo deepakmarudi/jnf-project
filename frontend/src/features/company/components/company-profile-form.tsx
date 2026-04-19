@@ -170,22 +170,7 @@ export default function CompanyProfileForm({
             ))}
           </TextField>
 
-          <TextField
-            label="Industry Tags"
-            placeholder="Technology, Analytics, SaaS"
-            value={industryTagsInput}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                industry_tag_ids: event.target.value
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter(Boolean),
-              }))
-            }
-            helperText="Enter comma-separated values for now."
-            fullWidth
-          />
+
 
           <FormControlLabel
             control={

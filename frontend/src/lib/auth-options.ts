@@ -1,6 +1,18 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
+const defaultApiBaseUrl = "http://127.0.0.1:8000/api";
+
+function buildAuthLoginUrl(role: string) {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || defaultApiBaseUrl;
+
+  if (role === "admin") {
+    return `${apiBaseUrl}/admin/auth/login`;
+  }
+
+  return `${apiBaseUrl}/auth/login`;
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -15,8 +27,8 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const role = credentials.role === "admin" ? "admin" : "auth";
-        const loginUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/api"}/${role}/login`;
+        const role = credentials.role === "admin" ? "admin" : "recruiter";
+        const loginUrl = buildAuthLoginUrl(role);
 
         try {
           const res = await fetch(loginUrl, {
@@ -41,7 +53,9 @@ export const authOptions: NextAuthOptions = {
               id: recruiter?.id?.toString() || admin?.id?.toString() || "1",
               name: recruiter?.full_name || admin?.name || "User",
               email: credentials.email,
-              role: credentials.role || "recruiter",
+              role,
+              company_id: recruiter?.company_id?.toString() || null,
+              company_name: recruiter?.company?.name || null,
               accessToken: data.data.token,
             };
           }
@@ -59,6 +73,8 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.company_id = user.company_id;
+        token.company_name = user.company_name;
         token.accessToken = user.accessToken;
       }
       return token;
@@ -69,6 +85,8 @@ export const authOptions: NextAuthOptions = {
           ...session.user,
           id: token.id as string,
           role: token.role as string,
+          company_id: (token.company_id as string) || null,
+          company_name: (token.company_name as string) || null,
           accessToken: token.accessToken as string,
         };
       }

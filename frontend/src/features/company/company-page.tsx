@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import Alert from "@mui/material/Alert";
 import Snackbar from "@mui/material/Snackbar";
 import Stack from "@mui/material/Stack";
@@ -99,7 +100,7 @@ export default function CompanyPage() {
         const apiError = error as { message?: string };
 
         if (apiError.message?.toLowerCase().includes("unauth")) {
-          router.replace(routes.public.login);
+          await signOut({ callbackUrl: routes.public.login, redirect: true });
           return;
         }
 

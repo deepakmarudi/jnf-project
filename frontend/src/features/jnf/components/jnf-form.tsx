@@ -3,6 +3,11 @@ import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
+import Alert from "@mui/material/Alert";
+import Paper from "@mui/material/Paper";
+import { uploadJdPdf } from "../lib/jnf-api";
 import type { JnfFieldErrors } from "../lib/jnf-validation";
 import {
   jnfSectionOrder,
@@ -39,6 +44,30 @@ export default function JnfForm({
 }: JnfFormProps) {
   const [expandedSection, setExpandedSection] =
     useState<JnfSectionKey | false>("company_summary");
+  const [uploadingJd, setUploadingJd] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const handleJdUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadingJd(true);
+    setUploadError("");
+
+    try {
+      const response = await uploadJdPdf(file);
+      setForm((current) => ({
+        ...current,
+        jd_pdf_path: response.jd_pdf_path,
+      }));
+    } catch (err: any) {
+      setUploadError(err?.message || "Failed to upload JD PDF. Please try again.");
+      console.error(err);
+    } finally {
+      setUploadingJd(false);
+      if (event.target) event.target.value = ""; // Reset input
+    }
+  };
 
   function isSectionCompleted(sectionKey: JnfSectionKey) {
     if (sectionKey === "company_summary") {
@@ -117,19 +146,6 @@ export default function JnfForm({
             minRows={3}
             fullWidth
           />
-
-          <TextField
-            label="JD PDF Path"
-            placeholder="/uploads/jd.pdf"
-            value={form.jd_pdf_path}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                jd_pdf_path: event.target.value,
-              }))
-            }
-            fullWidth
-          />
         </JnfFormGrid>
 
         <TextField
@@ -204,21 +220,75 @@ export default function JnfForm({
   }
 
   return (
-    <Stack spacing={2}>
-      <JnfSectionAccordion
-        title="Company Summary"
-        description="Review the company profile that will be used for this JNF."
-        expanded={expandedSection === "company_summary"}
-        completed={isSectionCompleted("company_summary")}
-        canSave={sectionValidity.company_summary}
-        onToggle={(isExpanded) =>
-          handleSectionToggle("company_summary", isExpanded)
-        }
-        onSave={() => handleSectionSave("company_summary")}
-        showSaveButton={false}
+    <Stack spacing={3}>
+      <Paper 
+        variant="outlined" 
+        sx={{ 
+          p: 3, 
+          backgroundColor: 'primary.50',
+          borderColor: 'primary.200',
+          borderRadius: 2
+        }}
       >
-        <JnfCompanySummaryCard embedded />
-      </JnfSectionAccordion>
+        <Stack spacing={2}>
+          <div>
+            <Typography variant="h6" color="primary.900" gutterBottom>
+              Fast-Track with a Job Description
+            </Typography>
+            <Typography variant="body2" color="primary.800">
+              Already have a PDF Job Description? Upload it now!
+            </Typography>
+          </div>
+          
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Button
+              variant="contained"
+              component="label"
+              disabled={uploadingJd}
+              sx={{ minWidth: 160 }}
+              size="large"
+            >
+              {uploadingJd ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : (
+                "Upload JD PDF"
+              )}
+              <input
+                type="file"
+                hidden
+                accept="application/pdf"
+                onChange={handleJdUpload}
+              />
+            </Button>
+            
+            {form.jd_pdf_path && (
+              <Typography variant="body2" color="success.main" fontWeight={500}>
+                ✓ Successfully Attached: {form.jd_pdf_path.split("/").pop()}
+              </Typography>
+            )}
+          </Stack>
+          
+          {uploadError && (
+            <Alert severity="error" sx={{ mt: 1 }}>{uploadError}</Alert>
+          )}
+        </Stack>
+      </Paper>
+
+      <Stack spacing={2}>
+        <JnfSectionAccordion
+          title="Company Summary"
+          description="Review the company profile that will be used for this JNF."
+          expanded={expandedSection === "company_summary"}
+          completed={isSectionCompleted("company_summary")}
+          canSave={sectionValidity.company_summary}
+          onToggle={(isExpanded) =>
+            handleSectionToggle("company_summary", isExpanded)
+          }
+          onSave={() => handleSectionSave("company_summary")}
+          showSaveButton={false}
+        >
+          <JnfCompanySummaryCard embedded />
+        </JnfSectionAccordion>
 
       <JnfSectionAccordion
         title="Job Profile"
@@ -324,6 +394,7 @@ export default function JnfForm({
           embedded
         />
       </JnfSectionAccordion>
+    </Stack>
     </Stack>
   );
 }

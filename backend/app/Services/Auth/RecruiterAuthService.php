@@ -42,27 +42,28 @@ class RecruiterAuthService
         $companyData = collect($validatedData['company']);
         $companyName = strtolower(trim($companyData->get('name')));
 
-        $company = Company::firstOrCreate(
-            ['name' => $companyName],
-            [
-                'website' => $companyData->get('website'),
-                'postal_address' => $companyData->get('postal_address'),
-                'employee_count' => $companyData->get('employee_count'),
-                'sector' => $companyData->get('sector'),
-                'logo_path' => $companyData->get('logo_path'),
-                'category_or_org_type' => $companyData->get('category_or_org_type'),
-                'date_of_establishment' => $companyData->get('date_of_establishment'),
-                'annual_turnover' => $companyData->get('annual_turnover'),
-                'social_media_url' => $companyData->get('social_media_url'),
-                'hq_country' => $companyData->get('hq_country'),
-                'hq_city' => $companyData->get('hq_city'),
-                'nature_of_business' => $companyData->get('nature_of_business'),
-                'description' => $companyData->get('description'),
-                'is_mnc' => $companyData->get('is_mnc'),
-            ]
-        );
+        $company = Company::firstOrNew(['name' => $companyName]);
+        
+        $company->fill([
+            'website' => $companyData->get('website'),
+            'postal_address' => $companyData->get('postal_address'),
+            'employee_count' => $companyData->get('employee_count'),
+            'sector' => $companyData->get('sector'),
+            'logo_path' => $companyData->get('logo_path'),
+            'category_or_org_type' => $companyData->get('category_or_org_type'),
+            'date_of_establishment' => $companyData->get('date_of_establishment'),
+            'annual_turnover' => $companyData->get('annual_turnover'),
+            'social_media_url' => $companyData->get('social_media_url'),
+            'hq_country' => $companyData->get('hq_country'),
+            'hq_city' => $companyData->get('hq_city'),
+            'nature_of_business' => $companyData->get('nature_of_business'),
+            'description' => $companyData->get('description'),
+            'is_mnc' => clone $companyData->get('is_mnc', false) ? true : false,
+        ]);
+        
+        $company->save();
 
-        if ($company->wasRecentlyCreated && $companyData->has('industry_tag_ids')) {
+        if ($companyData->has('industry_tag_ids')) {
             $company->industryTags()->sync($companyData->get('industry_tag_ids', []));
         }
 
@@ -109,7 +110,7 @@ class RecruiterAuthService
         $token = $recruiter->createToken('recruiter-auth-token')->plainTextToken;
 
         return [
-            'recruiter' => $recruiter->toArray(),
+            'recruiter' => $recruiter->load('company')->toArray(),
             'token' => $token,
             'token_type' => 'Bearer',
         ];

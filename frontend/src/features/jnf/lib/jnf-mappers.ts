@@ -133,8 +133,13 @@ export function mapEligibilityResponseToRecord(
   const rule = eligibility.eligibility_rule;
   const next = createEmptyJnfEligibility();
 
+  const degreeIds = eligibility.programme_rows.map(p => String(p.programme_id));
+  const branchIds = eligibility.discipline_rows.map(d => String(d.discipline_id));
+
   return {
     ...next,
+    eligible_degree_ids: degreeIds,
+    eligible_branch_ids: branchIds,
     minimum_cgpa: rule?.minimum_cgpa != null ? Number(rule.minimum_cgpa) : "",
     max_total_backlogs: rule?.max_backlogs != null ? Number(rule.max_backlogs) : "",
     minimum_class_10_percentage: rule?.high_school_percentage_criterion != null ? Number(rule.high_school_percentage_criterion) : "",
@@ -152,6 +157,24 @@ export function mapEligibilityResponseToRecord(
 }
 
 export function mapRecordEligibilityToBackendPayload(record: JnfRecord) {
+  const programmeRows = record.eligibility.eligible_degree_ids.map(id => ({
+    programme_id: id,
+    is_eligible: true,
+    min_cpi: null,
+  }));
+
+  const disciplineRows = record.eligibility.eligible_branch_ids.map(id => {
+    // We need to know which programme this discipline belongs to.
+    // For now, we'll send it as is and the backend resolve the hierarchy if needed.
+    // But ideally, the frontend eligibility state should track this.
+    return {
+      discipline_id: id,
+      programme_id: record.eligibility.eligible_degree_ids[0] || null, // Best effort fallback
+      is_eligible: true,
+      min_cpi: null,
+    };
+  });
+
   return {
     minimum_cgpa:
       record.eligibility.minimum_cgpa === ""
@@ -170,8 +193,8 @@ export function mapRecordEligibilityToBackendPayload(record: JnfRecord) {
       record.eligibility.gender_filter === "other"
         ? "others"
         : record.eligibility.gender_filter,
-    programme_rows: [],
-    discipline_rows: [],
+    programme_rows: programmeRows,
+    discipline_rows: disciplineRows,
   };
 }
 

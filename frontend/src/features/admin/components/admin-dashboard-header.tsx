@@ -1,13 +1,33 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { signOut } from "next-auth/react";
 
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { logoutAdmin } from "@/features/auth/lib/auth-api";
 import { routes } from "@/lib/routes";
 
 export default function AdminDashboardHeader() {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    setIsLoggingOut(true);
+
+    try {
+      await logoutAdmin();
+    } catch {
+      // Clear the frontend session even if the backend logout request fails.
+    } finally {
+      await signOut({
+        callbackUrl: routes.public.adminLogin,
+        redirect: true,
+      });
+    }
+  }
+
   return (
     <Stack
       direction={{ xs: "column", sm: "row" }}
@@ -53,8 +73,13 @@ export default function AdminDashboardHeader() {
         </Typography>
       </Stack>
 
-      <Button variant="outlined" sx={{ px: 2 }}>
-        Logout
+      <Button
+        variant="outlined"
+        sx={{ px: 2 }}
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+      >
+        {isLoggingOut ? "Logging out..." : "Logout"}
       </Button>
     </Stack>
   );

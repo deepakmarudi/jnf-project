@@ -27,12 +27,6 @@ export default function RecruiterRouteGuard({
       return;
     }
 
-    if (
-      !session.company_profile_completed &&
-      pathname !== routes.recruiter.company
-    ) {
-      router.replace(routes.recruiter.company);
-    }
   }, [isLoading, pathname, router, session]);
 
   if (isLoading) {
@@ -41,13 +35,6 @@ export default function RecruiterRouteGuard({
 
   if (!session?.is_logged_in) {
     return <LoadingState message="Redirecting to login..." />;
-  }
-
-  if (
-    !session.company_profile_completed &&
-    pathname !== routes.recruiter.company
-  ) {
-    return <LoadingState message="Redirecting to company profile..." />;
   }
 
   return <>{children}</>;

@@ -27,6 +27,13 @@ export type BackendJnfCore = {
   review_notes: string | null;
   created_at: string;
   updated_at: string;
+  contacts?: BackendJnfContact[];
+  eligibility_rule?: BackendJnfEligibilityResponse['eligibility_rule'];
+  salary_packages?: BackendJnfSalaryPackage[];
+  selection_rounds?: BackendJnfRound[];
+  declaration?: BackendJnfDeclaration;
+  eligible_programmes?: BackendJnfEligibleProgramme[];
+  eligible_disciplines?: BackendJnfEligibleDiscipline[];
 };
 
 export type BackendJnfContact = {
@@ -43,6 +50,23 @@ export type BackendJnfContact = {
   updated_at: string;
 };
 
+export type BackendJnfEligibleProgramme = {
+  id: number;
+  jnf_id: number;
+  programme_id: number;
+  is_eligible: boolean;
+  min_cpi_for_programme: number | null;
+};
+
+export type BackendJnfEligibleDiscipline = {
+  id: number;
+  jnf_id: number;
+  programme_id: number;
+  discipline_id: number;
+  is_eligible: boolean;
+  min_cpi_for_discipline: number | null;
+};
+
 export type BackendJnfEligibilityResponse = {
   jnf_id: number;
   eligibility_rule: {
@@ -57,8 +81,8 @@ export type BackendJnfEligibilityResponse = {
     ma_dhss_allowed: boolean;
     other_specific_requirements: string | null;
   } | null;
-  programme_rows: Array<Record<string, unknown>>;
-  discipline_rows: Array<Record<string, unknown>>;
+  programme_rows: BackendJnfEligibleProgramme[];
+  discipline_rows: BackendJnfEligibleDiscipline[];
 };
 
 export type BackendJnfSalaryPackage = {
@@ -143,24 +167,6 @@ type JnfCoreResponse = {
   jnf: BackendJnfCore;
 };
 
-type ContactsResponse = {
-  contacts: BackendJnfContact[];
-};
-
-type SalaryResponse = {
-  jnf_id: number;
-  salary_packages: BackendJnfSalaryPackage[];
-};
-
-type RoundsResponse = {
-  selection_rounds: BackendJnfRound[];
-};
-
-type DeclarationResponse = {
-  jnf_id: number;
-  declaration: BackendJnfDeclaration | null;
-};
-
 type NoContent = Record<string, never>;
 
 export async function listJnfs(params?: {
@@ -224,114 +230,18 @@ export async function submitJnf(jnfId: string | number) {
   });
 }
 
-export async function listJnfContacts(jnfId: string | number) {
-  return fetchJson<ContactsResponse>(`/jnfs/${jnfId}/contacts`, {
-    method: "GET",
-  });
-}
+export async function uploadJdPdf(file: File) {
+  const formData = new FormData();
+  formData.append("jd_pdf", file);
 
-export async function createJnfContact(
-  jnfId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<{ contact: BackendJnfContact }>(`/jnfs/${jnfId}/contacts`, {
+  const response = await fetchJson<{ jd_pdf_path: string }>("/jnfs/upload-jd-pdf", {
     method: "POST",
-    body: payload,
+    body: formData,
   });
-}
 
-export async function updateJnfContact(
-  contactId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<{ contact: BackendJnfContact }>(`/jnfs/contacts/${contactId}`, {
-    method: "PUT",
-    body: payload,
-  });
-}
+  if (!response.data) {
+    throw new Error("Failed to upload JD PDF");
+  }
 
-export async function deleteJnfContact(contactId: string | number) {
-  return fetchJson<NoContent>(`/jnfs/contacts/${contactId}`, {
-    method: "DELETE",
-  });
-}
-
-export async function getJnfEligibility(jnfId: string | number) {
-  return fetchJson<BackendJnfEligibilityResponse>(`/jnfs/${jnfId}/eligibility`, {
-    method: "GET",
-  });
-}
-
-export async function upsertJnfEligibility(
-  jnfId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<BackendJnfEligibilityResponse>(`/jnfs/${jnfId}/eligibility`, {
-    method: "PUT",
-    body: payload,
-  });
-}
-
-export async function getJnfSalary(jnfId: string | number) {
-  return fetchJson<SalaryResponse>(`/jnfs/${jnfId}/salary`, {
-    method: "GET",
-  });
-}
-
-export async function upsertJnfSalary(
-  jnfId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<SalaryResponse>(`/jnfs/${jnfId}/salary`, {
-    method: "PUT",
-    body: payload,
-  });
-}
-
-export async function listJnfRounds(jnfId: string | number) {
-  return fetchJson<RoundsResponse>(`/jnfs/${jnfId}/rounds`, {
-    method: "GET",
-  });
-}
-
-export async function createJnfRound(
-  jnfId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<{ round: BackendJnfRound }>(`/jnfs/${jnfId}/rounds`, {
-    method: "POST",
-    body: payload,
-  });
-}
-
-export async function updateJnfRound(
-  roundId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<{ round: BackendJnfRound }>(`/jnfs/rounds/${roundId}`, {
-    method: "PUT",
-    body: payload,
-  });
-}
-
-export async function deleteJnfRound(roundId: string | number) {
-  return fetchJson<NoContent>(`/jnfs/rounds/${roundId}`, {
-    method: "DELETE",
-  });
-}
-
-export async function getJnfDeclaration(jnfId: string | number) {
-  return fetchJson<DeclarationResponse>(`/jnfs/${jnfId}/declaration`, {
-    method: "GET",
-  });
-}
-
-export async function upsertJnfDeclaration(
-  jnfId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<DeclarationResponse>(`/jnfs/${jnfId}/declaration`, {
-    method: "PUT",
-    body: payload,
-  });
+  return response.data;
 }

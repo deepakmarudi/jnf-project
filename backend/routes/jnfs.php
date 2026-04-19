@@ -22,6 +22,10 @@ Route::middleware(['auth:sanctum', 'recruiter.auth'])->group(function () {
 
         Route::post('/{jnf}/preview', [JnfController::class, 'preview']);
         Route::post('/{jnf}/submit', [JnfController::class, 'submit']);
+        
+        // Single PDF upload endpoint decoupled from specific JNF ID if needed, 
+        // useful for the recruiter to upload PDF immediately while form is still filling in memory.
+        Route::post('/upload-jd-pdf', [\App\Http\Controllers\JnfFileController::class, 'uploadJdPdf']);
 
         // Contacts
         Route::post('/{jnf}/contacts', [ContactController::class, 'store']);
