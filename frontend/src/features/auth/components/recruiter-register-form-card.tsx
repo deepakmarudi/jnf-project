@@ -122,7 +122,6 @@ export default function RecruiterRegisterFormCard() {
     try {
       await sendRecruiterOtp({
         recruiter_email: form.email.trim(),
-        recaptcha_token: "test",
       });
 
       setForm((current) => ({

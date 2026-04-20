@@ -1,16 +1,12 @@
 import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import AdminSidebar from "./components/admin-sidebar";
 import AdminJnfsTable from "./components/admin-jnfs-table";
 
 export default function AdminJnfsPage() {
   return (
-    <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
-      <AdminSidebar />
-      <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
-        <Stack spacing={4}>
-          <Stack spacing={1}>
+    <Stack spacing={4}>
+      <Stack spacing={1}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               JNF Review Queue
             </Typography>
@@ -32,8 +28,6 @@ export default function AdminJnfsPage() {
           >
             <AdminJnfsTable />
           </Box>
-        </Stack>
-      </Box>
-    </Box>
+    </Stack>
   );
 }

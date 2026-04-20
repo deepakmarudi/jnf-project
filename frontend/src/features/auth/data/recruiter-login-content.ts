@@ -9,8 +9,4 @@ export const recruiterLoginContent = {
     "Official portal for recruiter access and hiring workflow management.",
   formTitle: "Login",
   formDescription: "Enter your registered email and password to continue.",
-  captchaLabel: "I am not a robot",
-  captchaInputLabel: "Enter captcha",
-  captchaInputPlaceholder: "Type the captcha shown above",
-  captchaCode: "ISM27",
-} as const;
+};

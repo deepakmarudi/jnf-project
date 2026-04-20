@@ -17,9 +17,15 @@ class JnfDeclaration extends Model
         'rti_nirf_consent',
         'authorised_signatory_name',
         'authorised_signatory_designation',
+        'authorised_signatory_email',
+        'authorised_signatory_phone',
+        'declaration_place',
         'declaration_date',
         'typed_signature',
         'preview_confirmed',
+        'information_confirmed',
+        'authorization_confirmed',
+        'policy_consent_confirmed',
         'email_confirmation_sent_at',
     ];
 
@@ -32,6 +38,9 @@ class JnfDeclaration extends Model
         'rti_nirf_consent' => 'boolean',
         'declaration_date' => 'date',
         'preview_confirmed' => 'boolean',
+        'information_confirmed' => 'boolean',
+        'authorization_confirmed' => 'boolean',
+        'policy_consent_confirmed' => 'boolean',
         'email_confirmation_sent_at' => 'datetime',
     ];
 

@@ -105,7 +105,7 @@ export default function JnfSectionAccordion({
                   onClick={onSave}
                   disabled={!canSave}
                 >
-                  Save Changes
+                  Review Next Section
                 </Button>
               </Box>
             </>

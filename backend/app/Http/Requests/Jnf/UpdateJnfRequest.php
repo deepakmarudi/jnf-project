@@ -16,8 +16,10 @@ class UpdateJnfRequest extends FormRequest
         return [
             'jnf_number' => ['nullable', 'string', 'max:100'],
             'recruitment_season' => ['nullable', 'string', 'max:50'],
-            'job_title' => ['required', 'string', 'max:255'],
+            'job_title' => ['nullable', 'string', 'max:255'],
             'job_designation' => ['nullable', 'string', 'max:255'],
+            'department_or_function' => ['nullable', 'string', 'max:255'],
+            'role_type' => ['nullable', 'string', 'max:100'],
             'place_of_posting' => ['nullable', 'string', 'max:255'],
             'work_location_mode' => ['nullable', 'string', 'max:50'],
             'expected_hires' => ['nullable', 'integer', 'min:0'],
@@ -32,11 +34,11 @@ class UpdateJnfRequest extends FormRequest
 
             'contacts' => ['nullable', 'array'],
             'eligibility' => ['nullable', 'array'],
-            'programme_rows' => ['nullable', 'array'],
-            'discipline_rows' => ['nullable', 'array'],
-            'salary_packages' => ['nullable', 'array'],
-            'selection_rounds' => ['nullable', 'array'],
+            'salary_details' => ['nullable', 'array'],
+            'selection_process' => ['nullable', 'array'],
+            'additional_details' => ['nullable', 'array'],
             'declaration' => ['nullable', 'array'],
+            'required_skills' => ['nullable', 'array'],
         ];
     }
 }

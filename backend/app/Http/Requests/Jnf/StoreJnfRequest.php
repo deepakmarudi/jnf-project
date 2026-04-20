@@ -16,8 +16,10 @@ class StoreJnfRequest extends FormRequest
         return [
             'jnf_number' => ['nullable', 'string', 'max:100'],
             'recruitment_season' => ['nullable', 'string', 'max:50'],
-            'job_title' => ['required', 'string', 'max:255'],
+            'job_title' => ['nullable', 'string', 'max:255'],
             'job_designation' => ['nullable', 'string', 'max:255'],
+            'department_or_function' => ['nullable', 'string', 'max:255'],
+            'role_type' => ['nullable', 'string', 'max:100'],
             'place_of_posting' => ['nullable', 'string', 'max:255'],
             'work_location_mode' => ['nullable', 'string', 'max:50'],
             'expected_hires' => ['nullable', 'integer', 'min:0'],
@@ -29,6 +31,14 @@ class StoreJnfRequest extends FormRequest
             'registration_link' => ['nullable', 'url'],
             'onboarding_procedure' => ['nullable', 'string'],
             'jd_pdf_path' => ['nullable', 'string', 'max:255'],
+
+            'contacts' => ['nullable', 'array'],
+            'eligibility' => ['nullable', 'array'],
+            'salary_details' => ['nullable', 'array'],
+            'selection_process' => ['nullable', 'array'],
+            'additional_details' => ['nullable', 'array'],
+            'declaration' => ['nullable', 'array'],
+            'required_skills' => ['nullable', 'array'],
         ];
     }
 }

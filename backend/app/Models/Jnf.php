@@ -19,11 +19,30 @@ class Jnf extends Model
         'recruitment_season',
         'job_title',
         'job_designation',
+        'department_or_function',
+        'role_type',
         'place_of_posting',
         'work_location_mode',
         'expected_hires',
         'minimum_hires',
         'tentative_joining_month',
+        'selection_mode',
+        'campus_visit_required',
+        'pre_placement_talk_required',
+        'expected_hiring_timeline',
+        'preferred_ppt_date',
+        'preferred_interview_date',
+        'application_deadline',
+        'required_documents',
+        'dress_code_or_compliance_notes',
+        'travel_or_accommodation_policy',
+        'offer_validity_notes',
+        'additional_instructions_for_cdc',
+        'recruiter_remarks',
+        'benefits_and_perks',
+        'brochure_path',
+        'compensation_attachment_path',
+        'eligible_batch',
         'job_description_html',
         'additional_job_info',
         'bond_details',
@@ -32,13 +51,16 @@ class Jnf extends Model
         'jd_pdf_path',
         'status',
         'preview_completed',
+        'submission_acknowledged',
+        'self_edit_used',
+        'submission_count',
         'submitted_at',
         'reviewed_at',
         'review_notes',
+        'admin_feedback',
     ];
 
     protected $casts = [
-        'tentative_joining_month' => 'date',
         'preview_completed' => 'boolean',
         'submitted_at' => 'datetime',
         'reviewed_at' => 'datetime',
@@ -107,8 +129,7 @@ class Jnf extends Model
 
     public function skills(): BelongsToMany
     {
-        return $this->belongsToMany(Skill::class, 'jnf_skills')
-            ->withTimestamps();
+        return $this->belongsToMany(Skill::class, 'jnf_skills');
     }
 
     public function eligibleProgrammes(): BelongsToMany

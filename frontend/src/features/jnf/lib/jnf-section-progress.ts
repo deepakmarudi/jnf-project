@@ -15,20 +15,20 @@ export type JnfSectionProgressItem = {
 function hasRecruiterPoc(record: JnfRecord) {
   return record.contacts.some(
     (contact) =>
-      contact.role === "primary_poc" &&
+      contact.contact_type === "primary_poc" &&
       contact.full_name.trim() &&
       contact.email.trim() &&
-      contact.phone.trim()
+      contact.mobile_number.trim()
   );
 }
 
 function hasHrContact(record: JnfRecord) {
   return record.contacts.some(
     (contact) =>
-      contact.role === "head_hr" &&
+      contact.contact_type === "head_hr" &&
       contact.full_name.trim() &&
       contact.email.trim() &&
-      contact.phone.trim()
+      contact.mobile_number.trim()
   );
 }
 
@@ -38,7 +38,7 @@ function isJobProfileComplete(record: JnfRecord) {
       record.job_title.trim() &&
       record.job_designation.trim() &&
       record.place_of_posting.trim() &&
-      record.work_mode.trim() &&
+      record.work_location_mode.trim() &&
       record.expected_hires !== "" &&
       Number(record.expected_hires) > 0 &&
       record.tentative_joining_month.trim() &&
@@ -52,9 +52,9 @@ function isContactsComplete(record: JnfRecord) {
 
 function isEligibilityComplete(record: JnfRecord) {
   const hasBacklogRule =
-    record.eligibility.active_backlog_allowed === "yes"
-      ? record.eligibility.max_total_backlogs !== ""
-      : record.eligibility.active_backlog_allowed === "no";
+    record.eligibility.backlogs_allowed
+      ? record.eligibility.max_backlogs !== ""
+      : true;
 
   return Boolean(
     record.eligibility.eligible_programme.trim() &&
@@ -81,20 +81,19 @@ function isSalaryComplete(record: JnfRecord) {
 }
 
 function isSelectionProcessComplete(record: JnfRecord) {
-  return record.selection_process.rounds.some(
+  return record.selection_process.rounds.length > 0 && record.selection_process.rounds.every(
     (round) =>
-      round.order !== "" &&
+      round.round_order !== "" &&
       round.round_name.trim() &&
-      round.mode.trim() &&
-      round.scheduled_at.trim() &&
+      (round.round_category === "resume_shortlisting" || round.selection_mode.trim()) &&
       round.duration_minutes !== ""
   );
 }
 
 function isDeclarationComplete(record: JnfRecord) {
   return Boolean(
-    record.declaration.authorized_signatory_name.trim() &&
-      record.declaration.authorized_signatory_designation.trim() &&
+    record.declaration.authorised_signatory_name.trim() &&
+      record.declaration.authorised_signatory_designation.trim() &&
       record.declaration.typed_signature.trim() &&
       record.declaration.information_confirmed &&
       record.declaration.authorization_confirmed &&

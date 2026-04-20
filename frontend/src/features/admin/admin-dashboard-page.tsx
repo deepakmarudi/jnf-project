@@ -5,8 +5,6 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Grid from "@mui/material/Grid";
-import AdminDashboardHeader from "./components/admin-dashboard-header";
-import AdminSidebar from "./components/admin-sidebar";
 import AdminStatsGrid from "./components/admin-stats-grid";
 import AdminRecentActivityTable from "./components/admin-recent-activity-table";
 import AdminNotificationPanel from "./components/admin-notification-panel";
@@ -40,25 +38,12 @@ export default function AdminDashboardPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
-        <AdminSidebar />
-        <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
-          <LoadingState message="Loading dashboard data..." />
-        </Box>
-      </Box>
-    );
+    return <LoadingState message="Loading dashboard data..." />;
   }
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
-      <AdminSidebar />
-      <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
-        <Stack spacing={4}>
-          {/* Header */}
-          <AdminDashboardHeader />
-
-          {/* Dashboard Title */}
+    <Stack spacing={4}>
+      {/* Dashboard Title */}
           <Stack spacing={1}>
             <Typography variant="h4" sx={{ fontWeight: 700 }}>
               Admin Dashboard
@@ -123,10 +108,8 @@ export default function AdminDashboardPage() {
                 <AdminNotificationPanel />
               </Box>
             </Grid>
-          </Grid>
-        </Stack>
-      </Box>
-    </Box>
+      </Grid>
+    </Stack>
   );
 }
 

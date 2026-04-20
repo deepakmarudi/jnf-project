@@ -20,21 +20,21 @@ const contactMethodOptions = [
   { value: "either", label: "Either" },
 ] as const;
 
-function createContactRow(role: JnfContact["role"], id: string): JnfContact {
+function createContactRow(contact_type: JnfContact["contact_type"], id: string): JnfContact {
   return {
     ...createEmptyJnfContact(),
     id,
-    role,
+    contact_type,
   };
 }
 
 function ensureRequiredContacts(contacts: JnfContact[]) {
   const recruiterPoc =
-    contacts.find((contact) => contact.role === "primary_poc") ??
+    contacts.find((contact) => contact.contact_type === "primary_poc") ??
     createContactRow("primary_poc", "primary_poc_contact");
 
   const hrContact =
-    contacts.find((contact) => contact.role === "head_hr") ??
+    contacts.find((contact) => contact.contact_type === "head_hr") ??
     createContactRow("head_hr", "head_hr_contact");
 
   return [recruiterPoc, hrContact];
@@ -49,13 +49,13 @@ export default function JnfContactsSection({
   const contacts = ensureRequiredContacts(form.contacts);
 
   function handleUpdateContact(
-    role: "primary_poc" | "head_hr",
+    contact_type: "primary_poc" | "head_hr",
     field: keyof JnfContact,
     value: string
   ) {
     setForm((current) => {
       const nextContacts = ensureRequiredContacts(current.contacts).map((contact) =>
-        contact.role === role
+        contact.contact_type === contact_type
           ? {
               ...contact,
               [field]: value,
@@ -71,10 +71,11 @@ export default function JnfContactsSection({
   }
 
   function getContactError(
-    role: "primary_poc" | "head_hr",
-    field: "full_name" | "email" | "phone"
+    contact_type: "primary_poc" | "head_hr",
+    field: "full_name" | "email" | "mobile_number"
   ) {
-    return fieldErrors[`contacts.${role}.${field}`];
+    const errorKey = `contacts.${contact_type}.${field}`;
+    return fieldErrors[errorKey as keyof typeof fieldErrors];
   }
 
   const content = (
@@ -84,8 +85,8 @@ export default function JnfContactsSection({
       </Typography>
 
       {contacts.map((contact) => {
-        const isRecruiterPoc = contact.role === "primary_poc";
-        const role = isRecruiterPoc ? "primary_poc" : "head_hr";
+        const isRecruiterPoc = contact.contact_type === "primary_poc";
+        const contact_type = isRecruiterPoc ? "primary_poc" : "head_hr";
 
         return (
           <Stack
@@ -108,10 +109,10 @@ export default function JnfContactsSection({
                 required
                 value={contact.full_name}
                 onChange={(event) =>
-                  handleUpdateContact(role, "full_name", event.target.value)
+                  handleUpdateContact(contact_type, "full_name", event.target.value)
                 }
-                error={Boolean(getContactError(role, "full_name"))}
-                helperText={getContactError(role, "full_name")}
+                error={Boolean(getContactError(contact_type, "full_name"))}
+                helperText={getContactError(contact_type, "full_name")}
                 fullWidth
               />
 
@@ -119,7 +120,7 @@ export default function JnfContactsSection({
                 label="Designation"
                 value={contact.designation}
                 onChange={(event) =>
-                  handleUpdateContact(role, "designation", event.target.value)
+                  handleUpdateContact(contact_type, "designation", event.target.value)
                 }
                 fullWidth
               />
@@ -130,30 +131,30 @@ export default function JnfContactsSection({
                 required
                 value={contact.email}
                 onChange={(event) =>
-                  handleUpdateContact(role, "email", event.target.value)
+                  handleUpdateContact(contact_type, "email", event.target.value)
                 }
-                error={Boolean(getContactError(role, "email"))}
-                helperText={getContactError(role, "email")}
+                error={Boolean(getContactError(contact_type, "email"))}
+                helperText={getContactError(contact_type, "email")}
                 fullWidth
               />
 
               <TextField
-                label="Phone"
+                label="Mobile Number"
                 required
-                value={contact.phone}
+                value={contact.mobile_number}
                 onChange={(event) =>
-                  handleUpdateContact(role, "phone", event.target.value)
+                  handleUpdateContact(contact_type, "mobile_number", event.target.value)
                 }
-                error={Boolean(getContactError(role, "phone"))}
-                helperText={getContactError(role, "phone")}
+                error={Boolean(getContactError(contact_type, "mobile_number"))}
+                helperText={getContactError(contact_type, "mobile_number")}
                 fullWidth
               />
 
               <TextField
-                label="Alternate Phone"
-                value={contact.alternate_phone}
+                label="Landline / Alternate"
+                value={contact.landline}
                 onChange={(event) =>
-                  handleUpdateContact(role, "alternate_phone", event.target.value)
+                  handleUpdateContact(contact_type, "landline", event.target.value)
                 }
                 fullWidth
               />
@@ -164,7 +165,7 @@ export default function JnfContactsSection({
                 value={contact.preferred_contact_method}
                 onChange={(event) =>
                   handleUpdateContact(
-                    role,
+                    contact_type,
                     "preferred_contact_method",
                     event.target.value
                   )
@@ -182,7 +183,7 @@ export default function JnfContactsSection({
                 label="Remarks"
                 value={contact.remarks}
                 onChange={(event) =>
-                  handleUpdateContact(role, "remarks", event.target.value)
+                  handleUpdateContact(contact_type, "remarks", event.target.value)
                 }
                 fullWidth
               />

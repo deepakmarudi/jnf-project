@@ -9,10 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class JnfSalaryPackage extends Model
 {
     protected $fillable = [
-        'jnf_id',
         'programme_id',
         'salary_structure_mode',
         'currency',
+        'ctc',
+        'base_salary',
+        'variable_pay',
+        'joining_bonus',
+        'retention_bonus',
+        'performance_bonus',
+        'esops',
+        'stipend',
         'ctc_annual',
         'base_fixed',
         'monthly_take_home',

@@ -6,7 +6,6 @@ import type {
 
 type SendOtpPayload = {
   recruiter_email: string;
-  recaptcha_token: string;
 };
 
 type VerifyOtpPayload = {
@@ -36,10 +35,7 @@ export async function sendRecruiterOtp(payload: SendOtpPayload) {
     "/auth/send-otp",
     {
       method: "POST",
-      body: {
-        ...payload,
-        recaptcha_token: payload.recaptcha_token,
-      },
+      body: payload,
     }
   );
 }

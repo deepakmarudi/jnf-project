@@ -55,12 +55,6 @@ export default function RecruiterLoginFormCard() {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaRequired, setCaptchaRequired] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState("");
-
-  const isCaptchaValid =
-    captchaRequired &&
-    captchaValue.trim().toUpperCase() === recruiterLoginContent.captchaCode;
 
   function handleFieldChange<K extends keyof RecruiterLoginFormValues>(
     field: K,
@@ -79,14 +73,7 @@ export default function RecruiterLoginFormCard() {
     setFormError("");
   }
 
-  function handleCaptchaRequiredChange(required: boolean) {
-    setCaptchaRequired(required);
-    setFormError("");
 
-    if (!required) {
-      setCaptchaValue("");
-    }
-  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -99,10 +86,7 @@ export default function RecruiterLoginFormCard() {
       return;
     }
 
-    if (!captchaRequired || !isCaptchaValid) {
-      setFormError("Please complete the captcha verification to continue.");
-      return;
-    }
+
 
     setIsSubmitting(true);
     setFormError("");
@@ -195,55 +179,7 @@ export default function RecruiterLoginFormCard() {
             />
           </Stack>
 
-          <Stack spacing={1}>
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={captchaRequired}
-                  onChange={(event) =>
-                    handleCaptchaRequiredChange(event.target.checked)
-                  }
-                />
-              }
-              label={recruiterLoginContent.captchaLabel}
-              sx={{ mx: 0, justifyContent: "center" }}
-            />
 
-            {captchaRequired ? (
-              <Stack spacing={1.25}>
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1.25,
-                    borderRadius: 2,
-                    border: "1px dashed",
-                    borderColor: "divider",
-                    backgroundColor: "#f8fafc",
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      letterSpacing: "0.28em",
-                      color: "primary.main",
-                      fontWeight: 700,
-                    }}
-                  >
-                    {recruiterLoginContent.captchaCode}
-                  </Typography>
-                </Box>
-
-                <TextField
-                  label={recruiterLoginContent.captchaInputLabel}
-                  placeholder={recruiterLoginContent.captchaInputPlaceholder}
-                  value={captchaValue}
-                  onChange={(event) => setCaptchaValue(event.target.value)}
-                  fullWidth
-                />
-              </Stack>
-            ) : null}
-          </Stack>
 
           <Button
             type="submit"

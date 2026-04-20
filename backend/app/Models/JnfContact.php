@@ -15,6 +15,8 @@ class JnfContact extends Model
         'email',
         'mobile_number',
         'landline',
+        'preferred_contact_method',
+        'remarks',
         'is_optional',
     ];
 

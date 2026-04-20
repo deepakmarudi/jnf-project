@@ -26,7 +26,7 @@ const genderOptions = [
   { value: "all", label: "All" },
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
-  { value: "other", label: "Other" },
+  { value: "others", label: "Other" },
 ] as const;
 
 const yesNoOptions = [
@@ -61,7 +61,6 @@ export default function JnfEligibilitySection({
             return false;
           })
           .reduce((acc, p) => {
-            // De-duplicate by name to prevent React key collisions
             if (!acc.some(item => item.label === p.name)) {
               acc.push({ value: String(p.id), label: p.name });
             }
@@ -135,36 +134,21 @@ export default function JnfEligibilitySection({
         </TextField>
 
         <TextField
-          label="Minimum Class 10 Percentage"
+          label="High School Percentage (Class 10/12)"
           type="number"
-          value={form.eligibility.minimum_class_10_percentage}
+          required
+          value={form.eligibility.high_school_percentage_criterion}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               eligibility: {
                 ...current.eligibility,
-                minimum_class_10_percentage:
+                high_school_percentage_criterion:
                   event.target.value === "" ? "" : Number(event.target.value),
               },
             }))
           }
-          fullWidth
-        />
-
-        <TextField
-          label="Minimum Class 12 Percentage"
-          type="number"
-          value={form.eligibility.minimum_class_12_percentage}
-          onChange={(event) =>
-            setForm((current) => ({
-              ...current,
-              eligibility: {
-                ...current.eligibility,
-                minimum_class_12_percentage:
-                  event.target.value === "" ? "" : Number(event.target.value),
-              },
-            }))
-          }
+          helperText="Minimum overall percentage required in Class 10/12."
           fullWidth
         />
 
@@ -194,14 +178,13 @@ export default function JnfEligibilitySection({
         <TextField
           select
           label="Gap Year Allowed"
-          value={form.eligibility.gap_year_allowed}
+          value={form.eligibility.gap_year_allowed ? "yes" : "no"}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               eligibility: {
                 ...current.eligibility,
-                gap_year_allowed:
-                  event.target.value as JnfRecord["eligibility"]["gap_year_allowed"],
+                gap_year_allowed: event.target.value === "yes",
               },
             }))
           }
@@ -217,14 +200,13 @@ export default function JnfEligibilitySection({
         <TextField
           select
           label="History of Arrears Allowed"
-          value={form.eligibility.history_of_arrears_allowed}
+          value={form.eligibility.history_of_arrears_allowed ? "yes" : "no"}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               eligibility: {
                 ...current.eligibility,
-                history_of_arrears_allowed:
-                  event.target.value as JnfRecord["eligibility"]["history_of_arrears_allowed"],
+                history_of_arrears_allowed: event.target.value === "yes",
               },
             }))
           }
@@ -236,6 +218,7 @@ export default function JnfEligibilitySection({
             </MenuItem>
           ))}
         </TextField>
+
       </JnfFormGrid>
 
       <Autocomplete
@@ -304,7 +287,7 @@ export default function JnfEligibilitySection({
             error={Boolean(fieldErrors["eligibility.eligible_branch_ids"])}
             helperText={
               fieldErrors["eligibility.eligible_branch_ids"] ??
-              "Branch options depend on the selected programme and degrees. You can also choose All."
+              "Branch options depend on the selected programme and degrees."
             }
           />
         )}
@@ -334,23 +317,21 @@ export default function JnfEligibilitySection({
         <TextField
           select
           label="Active Backlogs Allowed"
-          value={form.eligibility.active_backlog_allowed}
+          value={form.eligibility.active_backlog_allowed_bool ? "yes" : "no"}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               eligibility: {
                 ...current.eligibility,
-                active_backlog_allowed:
-                  event.target.value as JnfRecord["eligibility"]["active_backlog_allowed"],
-                max_total_backlogs:
+                active_backlog_allowed_bool: event.target.value === "yes",
+                backlogs_allowed: event.target.value === "yes",
+                max_backlogs:
                   event.target.value === "yes"
-                    ? current.eligibility.max_total_backlogs
+                    ? current.eligibility.max_backlogs
                     : "",
               },
             }))
           }
-          error={Boolean(fieldErrors["eligibility.active_backlog_allowed"])}
-          helperText={fieldErrors["eligibility.active_backlog_allowed"]}
           fullWidth
         >
           {yesNoOptions.map((option) => (
@@ -360,37 +341,54 @@ export default function JnfEligibilitySection({
           ))}
         </TextField>
 
-        {form.eligibility.active_backlog_allowed === "yes" ? (
+        {form.eligibility.active_backlog_allowed_bool ? (
           <TextField
             label="Maximum Total Backlogs"
             type="number"
-            value={form.eligibility.max_total_backlogs}
+            value={form.eligibility.max_backlogs}
             onChange={(event) =>
               setForm((current) => ({
                 ...current,
                 eligibility: {
                   ...current.eligibility,
-                  max_total_backlogs:
+                  max_backlogs:
                     event.target.value === "" ? "" : Number(event.target.value),
                 },
               }))
             }
-            error={Boolean(fieldErrors["eligibility.max_total_backlogs"])}
-            helperText={fieldErrors["eligibility.max_total_backlogs"]}
             fullWidth
           />
         ) : null}
       </JnfFormGrid>
 
       <TextField
-        label="Eligibility Notes"
-        value={form.eligibility.eligibility_notes}
+        label="PhD Requirement (if any)"
+        value={form.eligibility.phd_department_requirement}
+        placeholder="e.g. Restricted to CSE and EE departments"
         onChange={(event) =>
           setForm((current) => ({
             ...current,
             eligibility: {
               ...current.eligibility,
-              eligibility_notes: event.target.value,
+              phd_department_requirement: event.target.value,
+              phd_allowed: event.target.value.length > 0,
+            },
+          }))
+        }
+        multiline
+        minRows={2}
+        fullWidth
+      />
+
+      <TextField
+        label="Eligibility Notes"
+        value={form.eligibility.other_specific_requirements}
+        onChange={(event) =>
+          setForm((current) => ({
+            ...current,
+            eligibility: {
+              ...current.eligibility,
+              other_specific_requirements: event.target.value,
             },
           }))
         }

@@ -9,16 +9,21 @@ class JnfEligibilityRule extends Model
 {
     protected $fillable = [
         'jnf_id',
+        'eligible_programme',
         'minimum_cgpa',
         'backlogs_allowed',
         'max_backlogs',
         'high_school_percentage_criterion',
+        'minimum_class_10_percentage',
+        'minimum_class_12_percentage',
         'gender_filter',
         'slp_requirement',
         'phd_allowed',
         'phd_department_requirement',
         'ma_dhss_allowed',
         'other_specific_requirements',
+        'gap_year_allowed',
+        'history_of_arrears_allowed',
     ];
 
     protected $casts = [

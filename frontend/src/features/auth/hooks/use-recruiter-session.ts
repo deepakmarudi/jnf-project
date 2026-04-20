@@ -17,6 +17,7 @@ export default function useRecruiterSession() {
         company_id: session.user.company_id ? Number(session.user.company_id) : null,
         company_name: session.user.company_name || null,
         is_logged_in: true,
+        company_profile_completed: (session.user as any).company_profile_completed ?? false,
       };
     }
     return null;

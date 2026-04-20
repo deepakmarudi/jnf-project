@@ -1,4 +1,14 @@
 import { fetchJson } from "@/lib/fetch-json";
+import type { JnfRecord } from "@/features/jnf/types";
+import { type BackendJnfCore } from "@/features/jnf/lib/jnf-api";
+import {
+  mapBackendContactsToRecord,
+  mapBackendDeclarationToRecord,
+  mapBackendRoundsToRecord,
+  mapBackendSalaryToRecord,
+  mapEligibilityResponseToRecord,
+  mapBackendJnfCoreToRecord,
+} from "@/features/jnf/lib/jnf-mappers";
 
 export type AdminJnfOverview = {
   id: string;
@@ -72,6 +82,39 @@ export async function listAdminJnfs() {
       status: item.status as string,
     })
   );
+}
+
+export async function getAdminJnf(id: string): Promise<JnfRecord> {
+  const response = await fetchJson<{ jnf: BackendJnfCore }>(`/admin/jnfs/${id}`, {
+    method: "GET",
+  });
+  
+  const data = response.data.jnf;
+  const coreFields = mapBackendJnfCoreToRecord(data);
+
+  return {
+    ...coreFields,
+    contacts: data.contacts ? mapBackendContactsToRecord(data.contacts) : [],
+    eligibility: data.eligibility_rule 
+      ? mapEligibilityResponseToRecord({ 
+          jnf_id: Number(id), 
+          eligibility_rule: data.eligibility_rule, 
+          programme_rows: data.eligible_programmes ?? [], 
+          discipline_rows: data.eligible_disciplines ?? [] 
+        })
+      : mapEligibilityResponseToRecord({ 
+          jnf_id: Number(id), 
+          eligibility_rule: null, 
+          programme_rows: [], 
+          discipline_rows: [] 
+        }),
+    salary_details: data.salary_packages ? mapBackendSalaryToRecord(data.salary_packages) : mapBackendSalaryToRecord([]),
+    selection_process: {
+      ...coreFields.selection_process,
+      rounds: data.selection_rounds ? mapBackendRoundsToRecord(data.selection_rounds) : [],
+    },
+    declaration: mapBackendDeclarationToRecord(data.declaration ?? null),
+  };
 }
 
 export async function getAdminDashboardData() {
@@ -199,4 +242,25 @@ export async function listAdminNotifications() {
       createdAt: n.created_at,
     })
   );
+}
+
+export async function approveJnf(jnfId: string, notes?: string) {
+  return fetchJson<{ message: string }>(`/admin/jnfs/${jnfId}/approve`, {
+    method: "POST",
+    body: { notes: notes || null },
+  });
+}
+
+export async function requestChangesJnf(jnfId: string, notes: string) {
+  return fetchJson<{ message: string }>(`/admin/jnfs/${jnfId}/request-changes`, {
+    method: "POST",
+    body: { notes },
+  });
+}
+
+export async function closeJnf(jnfId: string, notes: string) {
+  return fetchJson<{ message: string }>(`/admin/jnfs/${jnfId}/close`, {
+    method: "POST",
+    body: { notes },
+  });
 }

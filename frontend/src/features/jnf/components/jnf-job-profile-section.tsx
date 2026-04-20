@@ -2,7 +2,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import CircularProgress from "@mui/material/CircularProgress";
 import SectionCard from "@/components/ui/section-card";
 import type { JnfFieldErrors } from "../lib/jnf-validation";
 import type { JnfRecord } from "../types";
@@ -25,7 +24,7 @@ const roleTypeOptions = [
 ] as const;
 
 const workModeOptions = [
-  { value: "onsite", label: "Onsite" },
+  { value: "on_site", label: "Onsite" },
   { value: "hybrid", label: "Hybrid" },
   { value: "remote", label: "Remote" },
 ] as const;
@@ -99,9 +98,9 @@ export default function JnfJobProfileSection({
           }
           fullWidth
         >
-          {jnfFunctionalAreaOptions.map((area) => (
-            <MenuItem key={area} value={area}>
-              {area}
+          {jnfFunctionalAreaOptions.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
             </MenuItem>
           ))}
           <MenuItem value="Other">Other</MenuItem>
@@ -133,13 +132,13 @@ export default function JnfJobProfileSection({
           select
           label="Work Mode"
           required
-          value={form.work_mode}
-          error={Boolean(fieldErrors["work_mode"])}
-          helperText={fieldErrors["work_mode"]}
+          value={form.work_location_mode}
+          error={Boolean(fieldErrors["work_location_mode"])}
+          helperText={fieldErrors["work_location_mode"]}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
-              work_mode: event.target.value as JnfRecord["work_mode"],
+              work_location_mode: event.target.value as JnfRecord["work_location_mode"],
             }))
           }
           fullWidth

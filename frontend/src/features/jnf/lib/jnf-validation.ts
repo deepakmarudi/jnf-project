@@ -23,24 +23,24 @@ export type JnfCompletedSections = Record<JnfSectionKey, boolean>;
 
 export type JnfFieldErrors = Partial<Record<string, string>>;
 
-function findContactByRole(
+function findContactByType(
   record: JnfRecord,
-  role: "primary_poc" | "head_hr"
+  type: "primary_poc" | "head_hr"
 ): JnfContact | null {
-  return record.contacts.find((contact) => contact.role === role) ?? null;
+  return record.contacts.find((contact) => contact.contact_type === type) ?? null;
 }
 
 function hasRequiredContact(
   record: JnfRecord,
-  role: "primary_poc" | "head_hr"
+  type: "primary_poc" | "head_hr"
 ) {
-  const contact = findContactByRole(record, role);
+  const contact = findContactByType(record, type);
 
   return Boolean(
     contact &&
       contact.full_name.trim() &&
       contact.email.trim() &&
-      contact.phone.trim()
+      contact.mobile_number.trim()
   );
 }
 
@@ -60,13 +60,10 @@ function hasValidSalary(record: JnfRecord) {
 }
 
 function hasValidSelectionProcess(record: JnfRecord) {
-  return record.selection_process.rounds.some(
+  return record.selection_process.rounds.length > 0 && record.selection_process.rounds.every(
     (round) =>
-      round.round_name.trim() &&
-      round.mode.trim() &&
-      round.order !== "" &&
-      round.scheduled_at.trim() &&
-      round.duration_minutes !== ""
+      round.round_category.trim() &&
+      (round.round_category === "resume_shortlisting" || round.selection_mode.trim())
   );
 }
 
@@ -89,8 +86,8 @@ export function getJnfFieldErrors(record: JnfRecord): JnfFieldErrors {
     errors["role_type"] = "Role type is required.";
   }
 
-  if (!record.work_mode.trim()) {
-    errors["work_mode"] = "Work mode is required.";
+  if (!record.work_location_mode.trim()) {
+    errors["work_location_mode"] = "Work mode is required.";
   }
 
   if (!record.place_of_posting.trim()) {
@@ -117,8 +114,8 @@ export function getJnfFieldErrors(record: JnfRecord): JnfFieldErrors {
     errors["job_description_html"] = "Job description is required.";
   }
 
-  const recruiterPoc = findContactByRole(record, "primary_poc");
-  const hrContact = findContactByRole(record, "head_hr");
+  const recruiterPoc = findContactByType(record, "primary_poc");
+  const hrContact = findContactByType(record, "head_hr");
 
   if (!recruiterPoc?.full_name.trim()) {
     errors["contacts.primary_poc.full_name"] = "Recruiter (PoC) name is required.";
@@ -128,8 +125,8 @@ export function getJnfFieldErrors(record: JnfRecord): JnfFieldErrors {
     errors["contacts.primary_poc.email"] = "Recruiter (PoC) email is required.";
   }
 
-  if (!recruiterPoc?.phone.trim()) {
-    errors["contacts.primary_poc.phone"] = "Recruiter (PoC) phone is required.";
+  if (!recruiterPoc?.mobile_number.trim()) {
+    errors["contacts.primary_poc.mobile_number"] = "Recruiter (PoC) phone is required.";
   }
 
   if (!hrContact?.full_name.trim()) {
@@ -140,8 +137,8 @@ export function getJnfFieldErrors(record: JnfRecord): JnfFieldErrors {
     errors["contacts.head_hr.email"] = "HR email is required.";
   }
 
-  if (!hrContact?.phone.trim()) {
-    errors["contacts.head_hr.phone"] = "HR phone is required.";
+  if (!hrContact?.mobile_number.trim()) {
+    errors["contacts.head_hr.mobile_number"] = "HR phone is required.";
   }
 
   record.contacts.forEach((contact, index) => {
@@ -169,16 +166,11 @@ export function getJnfFieldErrors(record: JnfRecord): JnfFieldErrors {
     errors["eligibility.minimum_cgpa"] = "Minimum CGPA is required.";
   }
 
-  if (!record.eligibility.active_backlog_allowed.trim()) {
-    errors["eligibility.active_backlog_allowed"] =
-      "Please select whether active backlogs are allowed.";
-  }
-
   if (
-    record.eligibility.active_backlog_allowed === "yes" &&
-    record.eligibility.max_total_backlogs === ""
+    record.eligibility.backlogs_allowed &&
+    record.eligibility.max_backlogs === ""
   ) {
-    errors["eligibility.max_total_backlogs"] =
+    errors["eligibility.max_backlogs"] =
       "Maximum total backlogs is required when active backlogs are allowed.";
   }
 
@@ -209,38 +201,31 @@ export function getJnfFieldErrors(record: JnfRecord): JnfFieldErrors {
   }
 
   record.selection_process.rounds.forEach((round, index) => {
-    if (!round.round_name.trim()) {
-      errors[`selection.rounds.${index}.round_name`] =
+    if (!round.round_category.trim()) {
+      errors[`selection.rounds.${index}.round_category`] =
         "Hiring stage is required.";
     }
 
-    if (!round.mode.trim()) {
-      errors[`selection.rounds.${index}.mode`] = "Mode is required.";
-    }
+    if (round.round_category !== "resume_shortlisting") {
+      if (!round.selection_mode.trim()) {
+        errors[`selection.rounds.${index}.selection_mode`] = "Mode is required.";
+      }
 
-    if (round.order === "") {
-      errors[`selection.rounds.${index}.order`] = "Round number is required.";
-    }
-
-    if (!round.scheduled_at.trim()) {
-      errors[`selection.rounds.${index}.scheduled_at`] =
-        "Date and time are required.";
-    }
-
-    if (round.duration_minutes === "") {
-      errors[`selection.rounds.${index}.duration_minutes`] =
-        "Duration is required.";
+      if (round.duration_minutes === "") {
+        errors[`selection.rounds.${index}.duration_minutes`] =
+          "Duration is required.";
+      }
     }
   });
 
-  if (!record.declaration.authorized_signatory_name.trim()) {
-    errors["declaration.authorized_signatory_name"] =
-      "Authorized signatory name is required.";
+  if (!record.declaration.authorised_signatory_name.trim()) {
+    errors["declaration.authorised_signatory_name"] =
+      "Authorised signatory name is required.";
   }
 
-  if (!record.declaration.authorized_signatory_designation.trim()) {
-    errors["declaration.authorized_signatory_designation"] =
-      "Authorized signatory designation is required.";
+  if (!record.declaration.authorised_signatory_designation.trim()) {
+    errors["declaration.authorised_signatory_designation"] =
+      "Authorised signatory designation is required.";
   }
 
   if (!record.declaration.typed_signature.trim()) {
@@ -284,7 +269,7 @@ export function getJnfMissingRequiredFields(record: JnfRecord) {
     missing.push("Place of Posting");
   }
 
-  if (!record.work_mode.trim()) {
+  if (!record.work_location_mode.trim()) {
     missing.push("Work Mode");
   }
 
@@ -324,17 +309,6 @@ export function getJnfMissingRequiredFields(record: JnfRecord) {
     missing.push("Minimum CGPA");
   }
 
-  if (!record.eligibility.active_backlog_allowed.trim()) {
-    missing.push("Active Backlogs Allowed");
-  }
-
-  if (
-    record.eligibility.active_backlog_allowed === "yes" &&
-    record.eligibility.max_total_backlogs === ""
-  ) {
-    missing.push("Maximum Total Backlogs");
-  }
-
   if (!hasValidSalary(record)) {
     missing.push("Salary Details");
   }
@@ -343,12 +317,12 @@ export function getJnfMissingRequiredFields(record: JnfRecord) {
     missing.push("Selection Process");
   }
 
-  if (!record.declaration.authorized_signatory_name.trim()) {
-    missing.push("Authorized Signatory Name");
+  if (!record.declaration.authorised_signatory_name.trim()) {
+    missing.push("Authorised Signatory Name");
   }
 
-  if (!record.declaration.authorized_signatory_designation.trim()) {
-    missing.push("Authorized Signatory Designation");
+  if (!record.declaration.authorised_signatory_designation.trim()) {
+    missing.push("Authorised Signatory Designation");
   }
 
   if (!record.declaration.typed_signature.trim()) {
@@ -391,17 +365,10 @@ export function getJnfValidationErrors(record: JnfRecord) {
   });
 
   if (
-    record.eligibility.minimum_class_10_percentage !== "" &&
-    Number(record.eligibility.minimum_class_10_percentage) > 100
+    record.eligibility.high_school_percentage_criterion !== "" &&
+    Number(record.eligibility.high_school_percentage_criterion) > 100
   ) {
-    errors.push("Class 10 percentage cannot be greater than 100.");
-  }
-
-  if (
-    record.eligibility.minimum_class_12_percentage !== "" &&
-    Number(record.eligibility.minimum_class_12_percentage) > 100
-  ) {
-    errors.push("Class 12 percentage cannot be greater than 100.");
+    errors.push("High school percentage cannot be greater than 100.");
   }
 
   return errors;

@@ -45,6 +45,8 @@ export type BackendJnfContact = {
   email: string;
   mobile_number: string | null;
   landline: string | null;
+  preferred_contact_method: string | null;
+  remarks: string | null;
   is_optional: boolean;
   created_at: string;
   updated_at: string;
@@ -75,9 +77,11 @@ export type BackendJnfEligibilityResponse = {
     max_backlogs: number | null;
     high_school_percentage_criterion: number | null;
     gender_filter: string;
-    slp_requirement: string | null;
+    gap_year_allowed: boolean;
+    history_of_arrears_allowed: boolean;
     phd_allowed: boolean;
     phd_department_requirement: string | null;
+    slp_requirement: string | null;
     ma_dhss_allowed: boolean;
     other_specific_requirements: string | null;
   } | null;
@@ -91,6 +95,14 @@ export type BackendJnfSalaryPackage = {
   programme_id: number | null;
   salary_structure_mode: string | null;
   currency: string | null;
+  ctc: number | null;
+  base_salary: number | null;
+  variable_pay: number | null;
+  joining_bonus: number | null;
+  retention_bonus: number | null;
+  performance_bonus: number | null;
+  esops: number | null;
+  stipend: number | null;
   ctc_annual: number | null;
   base_fixed: number | null;
   monthly_take_home: number | null;
@@ -148,8 +160,14 @@ export type BackendJnfDeclaration = {
   ranking_media_consent: boolean;
   accuracy_terms_accepted: boolean;
   rti_nirf_consent: boolean;
+  information_confirmed: boolean;
+  authorization_confirmed: boolean;
+  policy_consent_confirmed: boolean;
   authorised_signatory_name: string | null;
   authorised_signatory_designation: string | null;
+  authorised_signatory_email: string | null;
+  authorised_signatory_phone: string | null;
+  declaration_place: string | null;
   declaration_date: string | null;
   typed_signature: string | null;
   preview_confirmed: boolean;
@@ -176,58 +194,32 @@ export async function listJnfs(params?: {
 }) {
   const searchParams = new URLSearchParams();
 
-  if (params?.status) {
-    searchParams.set("status", params.status);
-  }
-
-  if (params?.recruitment_season) {
-    searchParams.set("recruitment_season", params.recruitment_season);
-  }
-
-  if (params?.search) {
-    searchParams.set("search", params.search);
-  }
+  if (params?.status) searchParams.set("status", params.status);
+  if (params?.recruitment_season) searchParams.set("recruitment_season", params.recruitment_season);
+  if (params?.search) searchParams.set("search", params.search);
 
   const query = searchParams.toString();
-
-  return fetchJson<ListJnfsResponse>(`/jnfs${query ? `?${query}` : ""}`, {
-    method: "GET",
-  });
+  return fetchJson<ListJnfsResponse>(`/jnfs${query ? `?${query}` : ""}`, { method: "GET" });
 }
 
 export async function getJnfCore(jnfId: string | number) {
-  return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}`, {
-    method: "GET",
-  });
+  return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}`, { method: "GET" });
 }
 
 export async function createJnfCore(payload: JsonObject) {
-  return fetchJson<JnfCoreResponse>("/jnfs", {
-    method: "POST",
-    body: payload,
-  });
+  return fetchJson<JnfCoreResponse>("/jnfs", { method: "POST", body: payload });
 }
 
-export async function updateJnfCore(
-  jnfId: string | number,
-  payload: JsonObject
-) {
-  return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}`, {
-    method: "PUT",
-    body: payload,
-  });
+export async function updateJnfCore(jnfId: string | number, payload: JsonObject) {
+  return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}`, { method: "PUT", body: payload });
 }
 
 export async function deleteJnfCore(jnfId: string | number) {
-  return fetchJson<NoContent>(`/jnfs/${jnfId}`, {
-    method: "DELETE",
-  });
+  return fetchJson<NoContent>(`/jnfs/${jnfId}`, { method: "DELETE" });
 }
 
 export async function submitJnf(jnfId: string | number) {
-  return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}/submit`, {
-    method: "POST",
-  });
+  return fetchJson<JnfCoreResponse>(`/jnfs/${jnfId}/submit`, { method: "POST" });
 }
 
 export async function uploadJdPdf(file: File) {
@@ -239,9 +231,32 @@ export async function uploadJdPdf(file: File) {
     body: formData,
   });
 
-  if (!response.data) {
-    throw new Error("Failed to upload JD PDF");
-  }
+  if (!response.data) throw new Error("Failed to upload JD PDF");
+  return response.data;
+}
 
+export type JdParsedData = {
+  job_title: string | null;
+  job_designation: string | null;
+  place_of_posting: string | null;
+  work_location_mode: string | null;
+  expected_hires: number | null;
+  minimum_hires: number | null;
+  tentative_joining_month: string | null;
+  ctc_annual: number | null;
+  base_fixed: number | null;
+  minimum_cgpa: number | null;
+};
+
+export async function importJdWithAi(file: File) {
+  const formData = new FormData();
+  formData.append("jd_pdf", file);
+
+  const response = await fetchJson<JdParsedData>("/jnfs/import-jd", {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!response.data) throw new Error("Failed to parse JD PDF via AI");
   return response.data;
 }

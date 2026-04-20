@@ -16,15 +16,14 @@ import { getMyCompanyProfile } from "@/features/company/lib/company-api";
 import type { CompanyProfile } from "@/features/company/types";
 import { routes } from "@/lib/routes";
 import JnfForm from "./components/jnf-form";
+import JnfAiUploadHeader from "./components/jnf-ai-upload-header";
 import {
   getJnfFieldErrors,
   getJnfMissingRequiredFields,
 } from "./lib/jnf-validation";
 import {
   getJnfSectionValidity,
-  initialJnfCompletedSections,
   jnfSectionOrder,
-  type JnfCompletedSections,
 } from "./lib/jnf-section-validation";
 import { fetchJnfFullRecord, saveJnfFullRecord } from "./lib/jnf-orchestrator";
 import { submitJnf } from "./lib/jnf-api";
@@ -44,8 +43,6 @@ export default function JnfEditorPage({
   const { session, isLoading: isSessionLoading } = useRecruiterSession();
 
   const [form, setForm] = useState<JnfRecord>(emptyJnfRecord);
-  const [completedSections, setCompletedSections] =
-    useState<JnfCompletedSections>(initialJnfCompletedSections);
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(null);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [, setIsSaving] = useState(false);
@@ -73,12 +70,21 @@ export default function JnfEditorPage({
 
         // If we were in create mode and now have an ID, transition to edit mode
         if (mode === "create" && savedRecord.id) {
-          // Replace URL without reloading to avoid losing focus if possible
-          // But actually, Next.js push/replace is better for state sync
           router.replace(`${routes.recruiter.jnfs}/${savedRecord.id}`);
+          
+          setForm(prev => ({
+            ...prev,
+            id: savedRecord.id,
+            jnf_number: savedRecord.jnf_number,
+            status: savedRecord.status,
+          }));
+        } else {
+          setForm(prev => ({
+            ...prev,
+            status: savedRecord.status,
+            updated_at: savedRecord.updated_at,
+          }));
         }
-        
-        setForm(savedRecord);
       } finally {
         setIsAutoSaving(false);
       }
@@ -128,7 +134,6 @@ export default function JnfEditorPage({
         try {
           const parsed = JSON.parse(savedDraft);
           setForm(parsed);
-          setCompletedSections(getJnfSectionValidity(parsed, companyProfile));
         } catch {
           setForm(emptyJnfRecord);
         }
@@ -175,7 +180,6 @@ export default function JnfEditorPage({
           };
 
           setForm(nextRecord);
-          setCompletedSections(getJnfSectionValidity(nextRecord, companyProfile));
           setInfoMessage(
             "You are using your one-time self-edit option. After resubmission, self-edit will no longer be available."
           );
@@ -190,7 +194,6 @@ export default function JnfEditorPage({
         }
 
         setForm(storedJnf);
-        setCompletedSections(getJnfSectionValidity(storedJnf, companyProfile));
         setIsLoading(false);
       } catch {
         if (!isMounted) return;
@@ -218,10 +221,8 @@ export default function JnfEditorPage({
     [form, companyProfile]
   );
 
-  const allSectionsCompleted = jnfSectionOrder.every((sectionKey) =>
-    sectionKey === "company_summary"
-      ? sectionValidity.company_summary
-      : completedSections[sectionKey] && sectionValidity[sectionKey]
+  const allSectionsCompleted = jnfSectionOrder.every(
+    (sectionKey) => sectionValidity[sectionKey]
   );
 
   async function handleSaveDraft() {
@@ -231,8 +232,8 @@ export default function JnfEditorPage({
       setForm(nextRecord);
       
       router.push(routes.recruiter.jnfs);
-    } catch {
-      alert("Failed to save the draft. Please try again.");
+    } catch (error: any) {
+      alert(error?.message || "Failed to save the draft. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -252,8 +253,8 @@ export default function JnfEditorPage({
       await submitJnf(nextRecord.id);
       
       router.push(routes.recruiter.jnfs);
-    } catch {
-      alert("Failed to submit the JNF. Please ensure everything is valid.");
+    } catch (error: any) {
+      alert(error?.message || "Failed to submit the JNF. Please ensure everything is valid.");
     } finally {
       setIsSaving(false);
     }
@@ -308,13 +309,13 @@ export default function JnfEditorPage({
           </Alert>
         )}
 
+        <JnfAiUploadHeader form={form} setForm={setForm} />
+
         <JnfForm
           form={form}
           setForm={setForm}
           fieldErrors={fieldErrors}
           sectionValidity={sectionValidity}
-          completedSections={completedSections}
-          setCompletedSections={setCompletedSections}
         />
 
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>

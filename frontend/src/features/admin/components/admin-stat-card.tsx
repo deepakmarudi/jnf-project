@@ -1,3 +1,5 @@
+import React from "react";
+import Box from "@mui/material/Box";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import Stack from "@mui/material/Stack";
@@ -6,13 +8,17 @@ import Typography from "@mui/material/Typography";
 type AdminStatCardProps = Readonly<{
   label: string;
   value: string | number;
-  icon?: string;
+  icon?: React.ReactNode;
+  iconColor?: string;
+  iconBgColor?: string;
 }>;
 
 export default function AdminStatCard({
   label,
   value,
   icon,
+  iconColor = "#2563EB",
+  iconBgColor = "#EFF6FF",
 }: AdminStatCardProps) {
   return (
     <Card
@@ -28,11 +34,25 @@ export default function AdminStatCard({
       }}
     >
       <CardContent>
-        <Stack spacing={2}>
+        <Stack spacing={2} alignItems="flex-start">
           {icon && (
-            <Typography variant="h4" sx={{ textAlign: "center" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 48,
+                height: 48,
+                borderRadius: "12px",
+                backgroundColor: iconBgColor,
+                color: iconColor,
+                "& > svg": {
+                  fontSize: 24,
+                },
+              }}
+            >
               {icon}
-            </Typography>
+            </Box>
           )}
           <Stack spacing={0.5}>
             <Typography variant="body2" sx={{ color: "text.secondary" }}>

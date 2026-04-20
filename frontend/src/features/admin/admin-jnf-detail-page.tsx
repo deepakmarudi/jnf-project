@@ -18,9 +18,17 @@ import SectionCard from "@/components/ui/section-card";
 import StatusChip from "@/components/ui/status-chip";
 import { routes } from "@/lib/routes";
 import type { JnfStatus } from "@/types/status";
-import AdminSidebar from "./components/admin-sidebar";
 import { useEffect } from "react";
-import { listAdminJnfs, type AdminJnfOverview } from "./lib/admin-api";
+import {
+  listAdminJnfs,
+  getAdminJnf,
+  approveJnf,
+  closeJnf,
+  requestChangesJnf,
+  type AdminJnfOverview,
+} from "./lib/admin-api";
+import type { JnfRecord } from "@/features/jnf/types";
+import { JnfDisplaySections } from "@/features/jnf/components/jnf-display-sections";
 import LoadingState from "@/components/ui/loading-state";
 
 type AdminJnfDetailPageProps = Readonly<{
@@ -29,23 +37,16 @@ type AdminJnfDetailPageProps = Readonly<{
 
 type ReviewDialogMode = "reject" | "changes" | null;
 
-const tabLabels = [
-  "Job Details",
-  "Eligibility",
-  "Salary",
-  "Selection Process",
-  "Declaration",
-];
-
 export default function AdminJnfDetailPage({
   id,
 }: AdminJnfDetailPageProps) {
-  const [activeTab, setActiveTab] = useState(0);
-  const [jnf, setJnf] = useState<AdminJnfOverview | null>(null);
+  const [overview, setOverview] = useState<AdminJnfOverview | null>(null);
+  const [fullRecord, setFullRecord] = useState<JnfRecord | null>(null);
   const [status, setStatus] = useState<JnfStatus>("submitted");
   const [dialogMode, setDialogMode] = useState<ReviewDialogMode>(null);
   const [feedbackText, setFeedbackText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchJnf() {
@@ -53,8 +54,10 @@ export default function AdminJnfDetailPage({
         const list = await listAdminJnfs();
         const found = list.find((j) => j.id === String(id));
         if (found) {
-          setJnf(found);
+          setOverview(found);
           setStatus(found.status as JnfStatus);
+          const detail = await getAdminJnf(String(id));
+          setFullRecord(detail);
         }
       } catch (err) {
         console.error(err);
@@ -66,83 +69,87 @@ export default function AdminJnfDetailPage({
   }, [id]);
 
   if (isLoading) {
-    return (
-      <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
-        <AdminSidebar />
-        <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
-          <LoadingState message="Loading secure submission..." />
-        </Box>
-      </Box>
-    );
+    return <LoadingState message="Loading secure submission..." />;
   }
 
-  if (!jnf) {
+  if (!overview || !fullRecord) {
     return (
-      <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
-        <AdminSidebar />
-        <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
-          <EmptyState
-            title="JNF not found"
-            description="The requested JNF record is not available."
-            actions={
-              <Button component={Link} href={routes.admin.jnfs} variant="contained">
-                Back to JNF Queue
-              </Button>
-            }
-          />
-        </Box>
-      </Box>
+      <EmptyState
+        title="JNF not found"
+        description="The requested JNF record is not available."
+        actions={
+          <Button component={Link} href={routes.admin.jnfs} variant="contained">
+            Back to JNF Queue
+          </Button>
+        }
+      />
     );
   }
 
   const reviewHistory = [
-    `Originally submitted: ${new Date(jnf.submittedAt).toLocaleDateString()}`,
+    `Originally submitted: ${new Date(overview.submittedAt).toLocaleDateString()}`,
     `Current status: ${status}`,
   ];
 
-  const handleApprove = () => {
-    setStatus("approved");
+  const handleApprove = async () => {
+    try {
+      setIsSubmitting(true);
+      await approveJnf(id, "JNF has been approved.");
+      setStatus("approved");
+    } catch (error) {
+      console.error("Failed to approve JNF:", error);
+      alert("Failed to approve JNF. Please check logs.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleRejectOrRequestChanges = () => {
-    if (dialogMode === "reject") {
-      setStatus("rejected");
-    }
+  const handleRejectOrRequestChanges = async () => {
+    try {
+      setIsSubmitting(true);
+      if (dialogMode === "reject") {
+        await closeJnf(id, feedbackText);
+        setStatus("rejected");
+      }
 
-    if (dialogMode === "changes") {
-      setStatus("changes_requested");
+      if (dialogMode === "changes") {
+        await requestChangesJnf(id, feedbackText);
+        setStatus("changes_requested");
+      }
+    } catch (error) {
+      console.error("Failed to submit feedback:", error);
+      alert("Failed to process request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+      setDialogMode(null);
+      setFeedbackText("");
     }
-
-    setDialogMode(null);
-    setFeedbackText("");
   };
 
   return (
-    <Box sx={{ display: "flex", bgcolor: "#f3f4f6", minHeight: "100vh" }}>
-      <AdminSidebar />
-      <Box sx={{ flexGrow: 1, ml: "260px", p: 3 }}>
-        <Stack spacing={4}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            justifyContent="space-between"
-            spacing={2}
+    <>
+      <Stack spacing={4}>
+      <Stack
+        direction={{ xs: "column", md: "row" }}
+        justifyContent="space-between"
+        spacing={2}
+      >
+        <Stack spacing={1}>
+          <Button
+            component={Link}
+            href={routes.admin.jnfs}
+            variant="text"
+            sx={{ alignSelf: "flex-start", px: 0 }}
           >
-            <Stack spacing={1}>
-              <Button
-                component={Link}
-                href={routes.admin.jnfs}
-                variant="text"
-                sx={{ alignSelf: "flex-start", px: 0 }}
-              >
-                Back to JNF Queue
-              </Button>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
-                {jnf.id} Review
-              </Typography>
-              <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                {jnf.companyName} | {jnf.jobTitle} | Submitted on {new Date(jnf.submittedAt).toLocaleDateString()}
-              </Typography>
-            </Stack>
+            Back to JNF Queue
+          </Button>
+          <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            {overview.id} Review
+          </Typography>
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            {overview.companyName} | {overview.jobTitle} | Submitted on {new Date(overview.submittedAt).toLocaleDateString()}
+          </Typography>
+        </Stack>
 
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -150,23 +157,34 @@ export default function AdminJnfDetailPage({
               alignItems={{ xs: "stretch", sm: "center" }}
             >
               <StatusChip status={normalizeAdminStatusForDisplay(status)} />
-              <Button variant="contained" color="success" onClick={handleApprove}>
-                Approve
-              </Button>
-              <Button
-                variant="outlined"
-                color="error"
-                onClick={() => setDialogMode("reject")}
-              >
-                Reject
-              </Button>
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={() => setDialogMode("changes")}
-              >
-                Request Changes
-              </Button>
+              {(status === "submitted" || status === "under_review") && (
+                <>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={handleApprove}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "Processing..." : "Approve"}
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => setDialogMode("reject")}
+                    disabled={isSubmitting}
+                  >
+                    Reject
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    onClick={() => setDialogMode("changes")}
+                    disabled={isSubmitting}
+                  >
+                    Request Changes
+                  </Button>
+                </>
+              )}
             </Stack>
           </Stack>
 
@@ -180,10 +198,10 @@ export default function AdminJnfDetailPage({
               justifyContent="space-between"
             >
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Recruiter: {jnf.recruiterName}
+                Recruiter: {overview.recruiterName}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Type: {jnf.roleType}
+                Type: {overview.roleType}
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Session: Data synced via backend
@@ -191,67 +209,8 @@ export default function AdminJnfDetailPage({
             </Stack>
           </SectionCard>
 
-          <SectionCard title="JNF Details">
-            <Tabs
-              value={activeTab}
-              onChange={(_, value) => setActiveTab(value)}
-              variant="scrollable"
-              allowScrollButtonsMobile
-            >
-              {tabLabels.map((label) => (
-                <Tab key={label} label={label} />
-              ))}
-            </Tabs>
-
-            {activeTab === 0 && (
-              <Stack spacing={2}>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Job Title
-                </Typography>
-                <Typography variant="body1">{jnf.jobTitle}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Company
-                </Typography>
-                <Typography variant="body1">{jnf.companyName}</Typography>
-                <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                  Role Type
-                </Typography>
-                <Typography variant="body1">{jnf.roleType}</Typography>
-              </Stack>
-            )}
-
-            {activeTab === 1 && (
-              <Stack spacing={2}>
-                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                   Core eligibility data is safely stored in the backend database.
-                 </Typography>
-              </Stack>
-            )}
-
-            {activeTab === 2 && (
-              <Stack spacing={2}>
-                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                   Detailed salary structures are stored securely on the backend.
-                 </Typography>
-              </Stack>
-            )}
-
-            {activeTab === 3 && (
-              <Stack spacing={2}>
-                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                   Interview and test sequences are tracked via the database.
-                 </Typography>
-              </Stack>
-            )}
-
-            {activeTab === 4 && (
-              <Stack spacing={2}>
-                 <Typography variant="body1" sx={{ color: "text.secondary", fontStyle: "italic" }}>
-                   Acknowledgement signatures verified dynamically.
-                 </Typography>
-              </Stack>
-            )}
-          </SectionCard>
+          {/* Genuine JNF Full Record Display */}
+          <JnfDisplaySections record={fullRecord} companyProfile={(fullRecord as any).company || null} />
 
           <SectionCard
             title="Review History"
@@ -266,7 +225,6 @@ export default function AdminJnfDetailPage({
             </Stack>
           </SectionCard>
         </Stack>
-      </Box>
 
       <Dialog open={dialogMode !== null} onClose={() => setDialogMode(null)} fullWidth>
         <DialogTitle>
@@ -293,13 +251,13 @@ export default function AdminJnfDetailPage({
           <Button
             onClick={handleRejectOrRequestChanges}
             variant="contained"
-            disabled={!feedbackText.trim()}
+            disabled={!feedbackText.trim() || isSubmitting}
           >
-            Submit
+            {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </>
   );
 }
 

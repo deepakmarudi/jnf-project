@@ -18,7 +18,9 @@ export default function PortalHomeHero({
       sx={{
         position: "relative",
         overflow: "hidden",
-        minHeight: { xs: 440, md: 520 },
+        width: "100%",
+        mt: 0,
+        minHeight: { xs: 480, md: 560 }, // Increased slightly for better hero impact
         display: "flex",
         alignItems: "center",
         backgroundColor: "#15345f",
@@ -109,7 +111,8 @@ export default function PortalHomeHero({
             Visit Institute Website
           </Button>
         </Stack>
-      </Container>
-    </Box>
+      </Stack>
+    </Container>
+  </Box>
   );
 }

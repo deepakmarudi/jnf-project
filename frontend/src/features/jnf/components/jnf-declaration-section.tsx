@@ -30,51 +30,51 @@ export default function JnfDeclarationSection({
 
       <JnfFormGrid>
         <TextField
-          label="Authorized Signatory Name"
+          label="Authorised Signatory Name"
           required
-          value={form.declaration.authorized_signatory_name}
+          value={form.declaration.authorised_signatory_name}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               declaration: {
                 ...current.declaration,
-                authorized_signatory_name: event.target.value,
+                authorised_signatory_name: event.target.value,
               },
             }))
           }
-          error={Boolean(fieldErrors["declaration.authorized_signatory_name"])}
-          helperText={fieldErrors["declaration.authorized_signatory_name"]}
+          error={Boolean(fieldErrors["declaration.authorised_signatory_name"])}
+          helperText={fieldErrors["declaration.authorised_signatory_name"]}
           fullWidth
         />
 
         <TextField
-          label="Authorized Signatory Designation"
+          label="Authorised Signatory Designation"
           required
-          value={form.declaration.authorized_signatory_designation}
+          value={form.declaration.authorised_signatory_designation}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               declaration: {
                 ...current.declaration,
-                authorized_signatory_designation: event.target.value,
+                authorised_signatory_designation: event.target.value,
               },
             }))
           }
-          error={Boolean(fieldErrors["declaration.authorized_signatory_designation"])}
-          helperText={fieldErrors["declaration.authorized_signatory_designation"]}
+          error={Boolean(fieldErrors["declaration.authorised_signatory_designation"])}
+          helperText={fieldErrors["declaration.authorised_signatory_designation"]}
           fullWidth
         />
 
         <TextField
-          label="Authorized Signatory Email"
+          label="Authorised Signatory Email"
           type="email"
-          value={form.declaration.authorized_signatory_email}
+          value={form.declaration.authorised_signatory_email}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               declaration: {
                 ...current.declaration,
-                authorized_signatory_email: event.target.value,
+                authorised_signatory_email: event.target.value,
               },
             }))
           }
@@ -82,14 +82,14 @@ export default function JnfDeclarationSection({
         />
 
         <TextField
-          label="Authorized Signatory Phone"
-          value={form.declaration.authorized_signatory_phone}
+          label="Authorised Signatory Phone"
+          value={form.declaration.authorised_signatory_phone}
           onChange={(event) =>
             setForm((current) => ({
               ...current,
               declaration: {
                 ...current.declaration,
-                authorized_signatory_phone: event.target.value,
+                authorised_signatory_phone: event.target.value,
               },
             }))
           }
@@ -167,7 +167,7 @@ export default function JnfDeclarationSection({
               }
             />
           }
-          label="I am authorized to submit this JNF on behalf of the company."
+          label="I am authorised to submit this JNF on behalf of the company."
         />
 
         <FormControlLabel
@@ -188,14 +188,6 @@ export default function JnfDeclarationSection({
           label="I agree to the relevant placement and recruiter submission guidelines."
         />
       </Stack>
-
-      {fieldErrors["declaration.information_confirmed"] ||
-      fieldErrors["declaration.authorization_confirmed"] ||
-      fieldErrors["declaration.policy_consent_confirmed"] ? (
-        <Alert severity="warning">
-          Complete all declaration confirmations before final submission.
-        </Alert>
-      ) : null}
 
       <TextField
         label="Typed Signature"
@@ -225,7 +217,7 @@ export default function JnfDeclarationSection({
   return (
     <SectionCard
       title="Declaration and Submit Readiness"
-      description="Capture the authorized signatory and the required recruiter confirmations."
+      description="Capture the authorised signatory and the required recruiter confirmations."
     >
       {content}
     </SectionCard>

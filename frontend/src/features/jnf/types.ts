@@ -2,7 +2,7 @@ import type { JnfStatus } from "@/types/status";
 
 export type JnfYesNo = "" | "yes" | "no";
 
-export type JnfWorkMode = "" | "onsite" | "hybrid" | "remote";
+export type JnfWorkMode = "" | "on_site" | "hybrid" | "remote";
 
 export type JnfRoleType =
   | ""
@@ -20,7 +20,7 @@ export type JnfContactRole =
 
 export type JnfPreferredContactMethod = "" | "email" | "phone" | "either";
 
-export type JnfGenderFilter = "all" | "male" | "female" | "other";
+export type JnfGenderFilter = "all" | "male" | "female" | "others";
 
 export type JnfSelectionMode = "" | "online" | "offline" | "hybrid";
 
@@ -30,35 +30,43 @@ export type JnfEligibilityProgramme = "" | "ug" | "pg" | "both";
 
 export type JnfContact = {
   id: string;
-  role: JnfContactRole;
+  contact_type: JnfContactRole;
   full_name: string;
   designation: string;
   email: string;
-  phone: string;
-  alternate_phone: string;
+  mobile_number: string;
+  landline: string;
   preferred_contact_method: JnfPreferredContactMethod;
   remarks: string;
+  is_optional: boolean;
 };
 
 export type JnfEligibility = {
-  eligible_batch: string;
   minimum_cgpa: number | "";
-  max_total_backlogs: number | "";
-  minimum_class_10_percentage: number | "";
+  backlogs_allowed: boolean;
+  max_backlogs: number | "";
+  high_school_percentage_criterion: number | "";
   minimum_class_12_percentage: number | "";
   gender_filter: JnfGenderFilter;
+  slp_requirement: string;
+  phd_allowed: boolean;
+  phd_department_requirement: string;
+  ma_dhss_allowed: boolean;
+  other_specific_requirements: string;
+  gap_year_allowed: boolean;
+  history_of_arrears_allowed: boolean;
+  
+  // UI ONLY FIELDS
+  eligible_batch: string;
   eligible_programme: JnfEligibilityProgramme;
   eligible_degree_ids: string[];
   eligible_branch_ids: string[];
-  gap_year_allowed: JnfYesNo;
-  active_backlog_allowed: JnfYesNo;
-  history_of_arrears_allowed: JnfYesNo;
-  eligibility_notes: string;
+  active_backlog_allowed_bool: boolean;
 };
 
 export type JnfSalaryBreakup = {
   id: string;
-  course_id: string;
+  programme_id: string;
   ctc: number | "";
   gross_salary: number | "";
   base_salary: number | "";
@@ -82,14 +90,14 @@ export type JnfSalaryDetails = {
 
 export type JnfSelectionRound = {
   id: string;
-  order: number | "";
+  round_category: string;
+  round_order: number | "";
   round_name: string;
-  round_type: string;
-  mode: JnfSelectionMode;
+  selection_mode: JnfSelectionMode;
   scheduled_at: string;
-  platform_or_tool: string;
   duration_minutes: number | "";
-  elimination_round: JnfYesNo;
+  is_enabled: boolean;
+  is_pre_offer_mandatory: boolean;
   infrastructure_required: string;
   panel_count: number | "";
   instructions: string;
@@ -120,10 +128,10 @@ export type JnfAdditionalDetails = {
 };
 
 export type JnfDeclaration = {
-  authorized_signatory_name: string;
-  authorized_signatory_designation: string;
-  authorized_signatory_email: string;
-  authorized_signatory_phone: string;
+  authorised_signatory_name: string;
+  authorised_signatory_designation: string;
+  authorised_signatory_email: string;
+  authorised_signatory_phone: string;
   declaration_place: string;
   declaration_date: string;
   information_confirmed: boolean;
@@ -143,7 +151,7 @@ export type JnfRecord = {
   department_or_function: string;
   role_type: JnfRoleType;
   place_of_posting: string;
-  work_mode: JnfWorkMode;
+  work_location_mode: JnfWorkMode;
   expected_hires: number | "";
   minimum_hires: number | "";
   tentative_joining_month: string;
@@ -188,39 +196,46 @@ export const initialJnfListFilters: JnfListFilterValues = {
 export function createEmptyJnfContact(): JnfContact {
   return {
     id: "",
-    role: "other",
+    contact_type: "other",
     full_name: "",
     designation: "",
     email: "",
-    phone: "",
-    alternate_phone: "",
+    mobile_number: "",
+    landline: "",
     preferred_contact_method: "",
     remarks: "",
+    is_optional: false,
   };
 }
 
 export function createEmptyJnfEligibility(): JnfEligibility {
   return {
-    eligible_batch: "",
     minimum_cgpa: "",
-    max_total_backlogs: "",
-    minimum_class_10_percentage: "",
+    backlogs_allowed: false,
+    max_backlogs: "",
+    high_school_percentage_criterion: "",
     minimum_class_12_percentage: "",
     gender_filter: "all",
+    slp_requirement: "",
+    phd_allowed: false,
+    phd_department_requirement: "",
+    ma_dhss_allowed: false,
+    other_specific_requirements: "",
+    gap_year_allowed: false,
+    history_of_arrears_allowed: false,
+    
+    eligible_batch: "",
     eligible_programme: "",
     eligible_degree_ids: [],
     eligible_branch_ids: [],
-    gap_year_allowed: "",
-    active_backlog_allowed: "",
-    history_of_arrears_allowed: "",
-    eligibility_notes: "",
+    active_backlog_allowed_bool: false,
   };
 }
 
 export function createEmptyJnfSalaryBreakup(): JnfSalaryBreakup {
   return {
     id: "",
-    course_id: "",
+    programme_id: "",
     ctc: "",
     gross_salary: "",
     base_salary: "",
@@ -248,14 +263,14 @@ export function createEmptyJnfSalaryDetails(): JnfSalaryDetails {
 export function createEmptyJnfSelectionRound(): JnfSelectionRound {
   return {
     id: "",
-    order: "",
+    round_category: "",
+    round_order: "",
     round_name: "",
-    round_type: "",
-    mode: "",
+    selection_mode: "",
     scheduled_at: "",
-    platform_or_tool: "",
     duration_minutes: "",
-    elimination_round: "",
+    is_enabled: true,
+    is_pre_offer_mandatory: false,
     infrastructure_required: "",
     panel_count: "",
     instructions: "",
@@ -292,10 +307,10 @@ export function createEmptyJnfAdditionalDetails(): JnfAdditionalDetails {
 
 export function createEmptyJnfDeclaration(): JnfDeclaration {
   return {
-    authorized_signatory_name: "",
-    authorized_signatory_designation: "",
-    authorized_signatory_email: "",
-    authorized_signatory_phone: "",
+    authorised_signatory_name: "",
+    authorised_signatory_designation: "",
+    authorised_signatory_email: "",
+    authorised_signatory_phone: "",
     declaration_place: "",
     declaration_date: "",
     information_confirmed: false,
@@ -327,7 +342,7 @@ export const emptyJnfRecord: JnfRecord = {
   department_or_function: "",
   role_type: "",
   place_of_posting: "",
-  work_mode: "",
+  work_location_mode: "",
   expected_hires: "",
   minimum_hires: "",
   tentative_joining_month: "",

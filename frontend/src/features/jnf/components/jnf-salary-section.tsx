@@ -24,7 +24,7 @@ function createDefaultSalaryRow() {
   return {
     ...createEmptyJnfSalaryBreakup(),
     id: "default_salary_row",
-    course_id: "all_courses",
+    programme_id: "all_courses",
   };
 }
 

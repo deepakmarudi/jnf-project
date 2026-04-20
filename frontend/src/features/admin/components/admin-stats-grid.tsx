@@ -1,4 +1,9 @@
 import Grid from "@mui/material/Grid";
+import GroupIcon from "@mui/icons-material/Group";
+import BusinessIcon from "@mui/icons-material/Business";
+import DescriptionIcon from "@mui/icons-material/Description";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import AdminStatCard from "./admin-stat-card";
 
 type AdminStatsGridProps = Readonly<{
@@ -22,7 +27,9 @@ export default function AdminStatsGrid({
         <AdminStatCard
           label="Total Recruiters"
           value={totalRecruiters}
-          icon="👨‍💼"
+          icon={<GroupIcon />}
+          iconColor="#10B981"
+          iconBgColor="#ECFDF5"
         />
       </Grid>
 
@@ -30,7 +37,9 @@ export default function AdminStatsGrid({
         <AdminStatCard
           label="Total Companies"
           value={totalCompanies}
-          icon="🏢"
+          icon={<BusinessIcon />}
+          iconColor="#6366F1"
+          iconBgColor="#EEF2FF"
         />
       </Grid>
 
@@ -38,7 +47,9 @@ export default function AdminStatsGrid({
         <AdminStatCard
           label="JNFs Submitted"
           value={totalJnfsSubmitted}
-          icon="📄"
+          icon={<DescriptionIcon />}
+          iconColor="#3B82F6"
+          iconBgColor="#EFF6FF"
         />
       </Grid>
 
@@ -46,7 +57,9 @@ export default function AdminStatsGrid({
         <AdminStatCard
           label="Approved JNFs"
           value={approvedJnfs}
-          icon="✅"
+          icon={<CheckCircleIcon />}
+          iconColor="#F59E0B"
+          iconBgColor="#FEF3C7"
         />
       </Grid>
 
@@ -54,7 +67,9 @@ export default function AdminStatsGrid({
         <AdminStatCard
           label="Pending JNFs"
           value={pendingJnfs}
-          icon="⏳"
+          icon={<HourglassEmptyIcon />}
+          iconColor="#EC4899"
+          iconBgColor="#FDF2F8"
         />
       </Grid>
     </Grid>

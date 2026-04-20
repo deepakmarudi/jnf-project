@@ -4,16 +4,19 @@ use App\Http\Controllers\Api\Jnf\ContactController;
 use App\Http\Controllers\Api\Jnf\DeclarationController;
 use App\Http\Controllers\Api\Jnf\DocumentController;
 use App\Http\Controllers\Api\Jnf\EligibilityController;
+use App\Http\Controllers\Api\Jnf\JnfAiController;
 use App\Http\Controllers\Api\Jnf\JnfController;
-use App\Http\Controllers\Api\Jnf\RoundController;
+use App\Http\Controllers\Api\Jnf\RoundController; 
 use App\Http\Controllers\Api\Jnf\SalaryController;
 use App\Http\Controllers\Api\Jnf\SkillController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'recruiter.auth'])->group(function () {
 
-    Route::prefix('jnfs')->group(function () {
+    Route::prefix('jnfs')->where(['jnf' => '[0-9]+'])->group(function () {
 
+        Route::post('/import-jd', [JnfAiController::class, 'importJd']);
+        
         Route::get('/', [JnfController::class, 'index']);
         Route::post('/', [JnfController::class, 'store']);
         Route::get('/{jnf}', [JnfController::class, 'show']);

@@ -9,8 +9,4 @@ export const adminLoginContent = {
     "Official admin portal for institutional recruitment management.",
   formTitle: "Admin Login",
   formDescription: "Enter your admin credentials to access the dashboard.",
-  captchaLabel: "I am not a robot",
-  captchaInputLabel: "Enter captcha",
-  captchaInputPlaceholder: "Type the captcha shown above",
-  captchaCode: "ADMIN27",
-} as const;
+};

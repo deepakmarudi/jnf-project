@@ -70,6 +70,30 @@ export default function RecruiterTopbar() {
         </Typography>
 
         <Stack direction="row" spacing={3} alignItems="center">
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 1, mr: 1 }}>
+            <Button 
+              component={Link} 
+              href={routes.recruiter.dashboard}
+              sx={{ fontWeight: 600, color: "text.primary" }}
+            >
+              Dashboard
+            </Button>
+            <Button 
+              component={Link} 
+              href={routes.recruiter.jnfs}
+              sx={{ fontWeight: 600, color: "text.primary" }}
+            >
+              All JNFs
+            </Button>
+            <Button 
+              component={Link} 
+              href={routes.recruiter.company}
+              sx={{ fontWeight: 600, color: "text.primary" }}
+            >
+              Company
+            </Button>
+          </Box>
+
           <Button
             component={Link}
             href={routes.recruiter.newJnf}
@@ -147,11 +171,29 @@ export default function RecruiterTopbar() {
         
         <MenuItem 
           component={Link} 
+          href={routes.recruiter.dashboard} 
+          onClick={handleClose}
+          sx={{ py: 1.5, display: { xs: 'block', md: 'none' } }}
+        >
+          Dashboard
+        </MenuItem>
+
+        <MenuItem 
+          component={Link} 
+          href={routes.recruiter.jnfs} 
+          onClick={handleClose}
+          sx={{ py: 1.5, display: { xs: 'block', md: 'none' } }}
+        >
+          All JNFs
+        </MenuItem>
+        
+        <MenuItem 
+          component={Link} 
           href={routes.recruiter.company} 
           onClick={handleClose}
           sx={{ py: 1.5 }}
         >
-          Company Page
+          Company Profile
         </MenuItem>
         
         <MenuItem 

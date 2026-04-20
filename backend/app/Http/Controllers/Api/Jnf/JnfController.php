@@ -37,7 +37,7 @@ class JnfController extends Controller
         );
     }
 
-    public function update(UpdateJnfRequest $request, int $jnf): JsonResponse
+    public function update(UpdateJnfRequest $request, int $jnf): JsonResponse 
     {
         return $this->api()->success(
             $this->jnfService->update($jnf, $request->validated())

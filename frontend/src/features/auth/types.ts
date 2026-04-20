@@ -5,6 +5,7 @@ export type RecruiterSession = {
   company_id: number | null;
   company_name: string | null;
   is_logged_in: boolean;
+  company_profile_completed: boolean;
 };
 
 export type RecruiterRegisterCompanyValues = {

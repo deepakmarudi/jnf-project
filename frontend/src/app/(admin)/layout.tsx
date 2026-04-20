@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import LoadingState from "@/components/ui/loading-state";
 import useAdminSession from "@/features/auth/hooks/use-admin-session";
 import { routes } from "@/lib/routes";
+import AdminShell from "@/components/layout/admin-shell";
 
 type AdminLayoutProps = Readonly<{
   children: React.ReactNode;
@@ -56,5 +57,5 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  return <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>{children}</Box>;
+  return <AdminShell>{children}</AdminShell>;
 }

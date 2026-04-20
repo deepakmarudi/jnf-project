@@ -31,6 +31,7 @@ export async function fetchJson<TData>(
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...headers,
       },
+      cache: "no-store",
       body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
     });
   } catch (error) {

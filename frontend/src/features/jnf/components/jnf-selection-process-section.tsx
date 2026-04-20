@@ -21,11 +21,15 @@ type JnfSelectionProcessSectionProps = Readonly<{
 }>;
 
 const roundStageOptions = [
-  { value: "Resume Shortlisting", label: "Resume Shortlisting" },
-  { value: "Written Test", label: "Written Test" },
-  { value: "Personal / Technical Interview", label: "Personal / Technical Interview" },
-  { value: "Psychometric Test", label: "Psychometric Test" },
-  { value: "Pre-Placement Talk", label: "Pre-Placement Talk" },
+  { value: "resume_shortlisting", label: "Resume Shortlisting" },
+  { value: "written_test", label: "Written Test" },
+  { value: "online_test", label: "Online Test" },
+  { value: "technical_interview", label: "Technical Interview" },
+  { value: "personal_interview", label: "Personal Interview" },
+  { value: "psychometric_test", label: "Psychometric Test" },
+  { value: "ppt", label: "Pre-Placement Talk" },
+  { value: "group_discussion", label: "Group Discussion" },
+  { value: "other", label: "Other" },
 ] as const;
 
 const selectionModeOptions = [
@@ -34,11 +38,11 @@ const selectionModeOptions = [
   { value: "hybrid", label: "Hybrid" },
 ] as const;
 
-function createRoundRow(order: number): JnfSelectionRound {
+function createRoundRow(round_order: number): JnfSelectionRound {
   return {
     ...createEmptyJnfSelectionRound(),
     id: `round_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    order,
+    round_order,
   };
 }
 
@@ -76,20 +80,14 @@ export default function JnfSelectionProcessSection({
 
   function handleUpdateRound(
     roundId: string,
-    field: keyof JnfSelectionRound,
-    value: string | number | ""
+    updates: Partial<JnfSelectionRound>
   ) {
     setForm((current) => ({
       ...current,
       selection_process: {
         ...current.selection_process,
         rounds: current.selection_process.rounds.map((round) =>
-          round.id === roundId
-            ? {
-                ...round,
-                [field]: value,
-              }
-            : round
+          round.id === roundId ? { ...round, ...updates } : round
         ),
       },
     }));
@@ -104,7 +102,7 @@ export default function JnfSelectionProcessSection({
           .filter((round) => round.id !== roundId)
           .map((round, index) => ({
             ...round,
-            order: index + 1,
+            round_order: index + 1,
           })),
       },
     }));
@@ -151,32 +149,19 @@ export default function JnfSelectionProcessSection({
 
           <JnfFormGrid>
             <TextField
-              label="Round No"
-              required
-              type="number"
-              value={round.order}
-              onChange={(event) =>
-                handleUpdateRound(
-                  round.id,
-                  "order",
-                  event.target.value === "" ? "" : Number(event.target.value)
-                )
-              }
-              error={Boolean(fieldErrors[`selection.rounds.${index}.order`])}
-              helperText={fieldErrors[`selection.rounds.${index}.order`]}
-              fullWidth
-            />
-
-            <TextField
               select
               label="Selection / Hiring Stage"
               required
-              value={round.round_name}
-              onChange={(event) =>
-                handleUpdateRound(round.id, "round_name", event.target.value)
-              }
-              error={Boolean(fieldErrors[`selection.rounds.${index}.round_name`])}
-              helperText={fieldErrors[`selection.rounds.${index}.round_name`]}
+              value={round.round_category}
+              onChange={(event) => {
+                const selectedOption = roundStageOptions.find(o => o.value === event.target.value);
+                handleUpdateRound(round.id, { 
+                  round_category: event.target.value,
+                  round_name: selectedOption?.label || event.target.value
+                });
+              }}
+              error={Boolean(fieldErrors[`selection.rounds.${index}.round_category`])}
+              helperText={fieldErrors[`selection.rounds.${index}.round_category`]}
               fullWidth
             >
               {roundStageOptions.map((option) => (
@@ -186,55 +171,43 @@ export default function JnfSelectionProcessSection({
               ))}
             </TextField>
 
-            <TextField
-              select
-              label="Mode"
-              required
-              value={round.mode}
-              onChange={(event) =>
-                handleUpdateRound(round.id, "mode", event.target.value)
-              }
-              error={Boolean(fieldErrors[`selection.rounds.${index}.mode`])}
-              helperText={fieldErrors[`selection.rounds.${index}.mode`]}
-              fullWidth
-            >
-              {selectionModeOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
+            {round.round_category !== "resume_shortlisting" && (
+              <>
+                <TextField
+                  select
+                  label="Mode"
+                  required
+                  value={round.selection_mode}
+                  onChange={(event) =>
+                    handleUpdateRound(round.id, { selection_mode: event.target.value as any })
+                  }
+                  error={Boolean(fieldErrors[`selection.rounds.${index}.selection_mode`])}
+                  helperText={fieldErrors[`selection.rounds.${index}.selection_mode`]}
+                  fullWidth
+                >
+                  {selectionModeOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
 
-            <TextField
-              label="Date & Time of the Round"
-              required
-              type="datetime-local"
-              value={round.scheduled_at ? String(round.scheduled_at).replace(' ', 'T').substring(0, 16) : ""}
-              onChange={(event) =>
-                handleUpdateRound(round.id, "scheduled_at", event.target.value)
-              }
-              error={Boolean(fieldErrors[`selection.rounds.${index}.scheduled_at`])}
-              helperText={fieldErrors[`selection.rounds.${index}.scheduled_at`]}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
-
-            <TextField
-              label="Duration (minutes)"
-              required
-              type="number"
-              value={round.duration_minutes}
-              onChange={(event) =>
-                handleUpdateRound(
-                  round.id,
-                  "duration_minutes",
-                  event.target.value === "" ? "" : Number(event.target.value)
-                )
-              }
-              error={Boolean(fieldErrors[`selection.rounds.${index}.duration_minutes`])}
-              helperText={fieldErrors[`selection.rounds.${index}.duration_minutes`]}
-              fullWidth
-            />
+                <TextField
+                  label="Duration (minutes)"
+                  required
+                  type="number"
+                  value={round.duration_minutes}
+                  onChange={(event) =>
+                    handleUpdateRound(round.id, { 
+                      duration_minutes: event.target.value === "" ? "" : Number(event.target.value) 
+                    })
+                  }
+                  error={Boolean(fieldErrors[`selection.rounds.${index}.duration_minutes`])}
+                  helperText={fieldErrors[`selection.rounds.${index}.duration_minutes`]}
+                  fullWidth
+                />
+              </>
+            )}
           </JnfFormGrid>
         </Stack>
       ))}
@@ -248,7 +221,7 @@ export default function JnfSelectionProcessSection({
   return (
     <SectionCard
       title="Selection Process"
-      description="Add the hiring rounds, their stage, mode, date and time, and duration."
+      description="List the hiring stages and rounds your recruitment process will follow."
     >
       {content}
     </SectionCard>
