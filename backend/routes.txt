@@ -1,0 +1,25 @@
+
+   ErrorException 
+
+  file_get_contents(/home/deepak_marudi/jnf-project/backend/composer.json): Failed to open stream: No such file or directory
+
+  at vendor/laravel/framework/src/Illuminate/Foundation/Application.php:1723
+    1719▕         if (! is_null($this->namespace)) {
+    1720▕             return $this->namespace;
+    1721▕         }
+    1722▕ 
+  ➜ 1723▕         $composer = json_decode(file_get_contents($this->basePath('composer.json')), true);
+    1724▕ 
+    1725▕         foreach ((array) data_get($composer, 'autoload.psr-4') as $namespace => $path) {
+    1726▕             foreach ((array) $path as $pathChoice) {
+    1727▕                 if (realpath($this->path()) === realpath($this->basePath($pathChoice))) {
+
+      [2m+3 vendor frames [22m
+
+  4   [internal]:0
+      Illuminate\Foundation\Console\RouteListCommand::Illuminate\Foundation\Console\{closure}()
+      [2m+18 vendor frames [22m
+
+  23  artisan:14
+      Illuminate\Foundation\Application::handleCommand()
+

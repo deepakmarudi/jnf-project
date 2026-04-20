@@ -1,0 +1,528 @@
+import Box from "@mui/material/Box";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import Alert from "@mui/material/Alert";
+import SectionCard from "@/components/ui/section-card";
+import { type CompanyProfile } from "@/features/company/types";
+import { type JnfRecord } from "../types";
+import {
+  getBranchLabels,
+  getDegreeLabels,
+  getProgrammeLabel,
+} from "../data/jnf-eligibility-options";
+
+export function PreviewGrid({ children }: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: {
+          xs: "1fr",
+          md: "repeat(2, minmax(0, 1fr))",
+        },
+        gap: 2,
+      }}
+    >
+      {children}
+    </Box>
+  );
+}
+
+export function toHumanLabel(value: string) {
+  if (!value.trim()) return "Not provided yet";
+  if (value === "yes") return "Yes";
+  if (value === "no") return "No";
+  return value.replace(/_/g, " ").replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+export function formatPreviewValue(value: string | number | boolean | string[] | null) {
+  if (Array.isArray(value)) return value.length > 0 ? value.join(", ") : "Not provided yet";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (value === null || value === "") return "Not provided yet";
+  if (typeof value === "string") return toHumanLabel(value);
+  return String(value);
+}
+
+export function formatDateOnly(value: string | null) {
+  if (!value || !value.trim()) return "Not provided yet";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+export function formatDateTime(value: string | null) {
+  if (!value) return "Not submitted yet";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+export function formatRoundSchedule(value: string | null) {
+  if (!value || !value.trim()) return "Not provided yet";
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+export function formatMoney(value: number | "" | null, currency: string) {
+  if (value === "" || value === null) return "Not provided yet";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(Number(value));
+}
+
+export function formatContactType(type: string) {
+  if (type === "primary_poc") return "Recruiter (PoC)";
+  if (type === "head_hr") return "HR";
+  if (type === "secondary_poc") return "Secondary PoC";
+  return toHumanLabel(type);
+}
+
+export function formatCourseApplicability(value: string) {
+  if (!value.trim()) return "Not provided yet";
+  if (value === "all_courses") return "All selected eligible candidates";
+  return toHumanLabel(value);
+}
+
+export function PreviewField({
+  label,
+  value,
+}: Readonly<{
+  label: string;
+  value: string | number | boolean | string[] | null;
+}>) {
+  return (
+    <Stack spacing={0.5}>
+      <Typography variant="caption" sx={{ color: "text.secondary" }}>
+        {label}
+      </Typography>
+      <Typography variant="body2">{formatPreviewValue(value)}</Typography>
+    </Stack>
+  );
+}
+
+type JnfDisplaySectionsProps = Readonly<{
+  record: JnfRecord;
+  companyProfile: CompanyProfile | null;
+}>;
+
+export function JnfDisplaySections({ record, companyProfile }: JnfDisplaySectionsProps) {
+  return (
+    <Stack spacing={4}>
+      <SectionCard
+        title="Submission Summary"
+        description="Current submission state and review information."
+      >
+        <PreviewGrid>
+          <PreviewField label="Submission Count" value={record.submission_count} />
+          <PreviewField label="Self Edit Used" value={record.self_edit_used} />
+          <PreviewField
+            label="Last Submitted At"
+            value={formatDateTime(record.submitted_at)}
+          />
+          <PreviewField label="Preview Completed" value={record.preview_completed} />
+        </PreviewGrid>
+      </SectionCard>
+
+      <SectionCard
+        title="Company Summary"
+        description="Current recruiter company profile linked to this JNF."
+      >
+        {companyProfile ? (
+          <PreviewGrid>
+            <PreviewField label="Company Name" value={companyProfile.name} />
+            <PreviewField label="Website" value={companyProfile.website} />
+            <PreviewField label="Sector" value={companyProfile.sector} />
+            <PreviewField
+              label="Organization Type"
+              value={companyProfile.category_or_org_type}
+            />
+            <PreviewField label="Headquarters City" value={companyProfile.hq_city} />
+            <PreviewField
+              label="Headquarters Country"
+              value={companyProfile.hq_country}
+            />
+            <PreviewField
+              label="Employee Count"
+              value={companyProfile.employee_count}
+            />
+            <PreviewField
+              label="Company Description"
+              value={companyProfile.description}
+            />
+          </PreviewGrid>
+        ) : (
+          <Alert severity="warning">
+            Company profile is not available for preview.
+          </Alert>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Job Profile"
+        description="Main job details entered by the recruiter."
+      >
+        <PreviewGrid>
+          <PreviewField label="Recruitment Season" value={record.recruitment_season} />
+          <PreviewField label="Job Title" value={record.job_title} />
+          <PreviewField label="Job Designation" value={record.job_designation} />
+          <PreviewField
+            label="Department / Function"
+            value={record.department_or_function}
+          />
+          <PreviewField label="Role Type" value={record.role_type} />
+          <PreviewField label="Work Mode" value={record.work_location_mode} />
+          <PreviewField label="Place of Posting" value={record.place_of_posting} />
+          <PreviewField label="Expected Hires" value={record.expected_hires} />
+          <PreviewField label="Minimum Hires" value={record.minimum_hires} />
+          <PreviewField
+            label="Tentative Joining Month"
+            value={record.tentative_joining_month}
+          />
+          <PreviewField label="Required Skills" value={record.required_skills} />
+          <PreviewField label="JD PDF Path" value={record.jd_pdf_path} />
+        </PreviewGrid>
+
+        <Stack spacing={2} sx={{ mt: 2.5 }}>
+          <PreviewField label="Job Description" value={record.job_description_html} />
+          <PreviewField
+            label="Additional Job Information"
+            value={record.additional_job_info}
+          />
+        </Stack>
+      </SectionCard>
+
+      <SectionCard
+        title="Contacts"
+        description="Recruiter and HR contacts attached to this JNF."
+      >
+        {record.contacts.length === 0 ? (
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            No contacts added yet.
+          </Typography>
+        ) : (
+          <Stack spacing={2}>
+            {record.contacts.map((contact, index) => (
+              <Box
+                key={contact.id || index}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    {formatContactType(contact.contact_type)}
+                  </Typography>
+
+                  <PreviewGrid>
+                    <PreviewField label="Full Name" value={contact.full_name} />
+                    <PreviewField label="Designation" value={contact.designation} />
+                    <PreviewField label="Email" value={contact.email} />
+                    <PreviewField label="Phone" value={contact.mobile_number} />
+                    <PreviewField
+                      label="Alternate Phone"
+                      value={contact.landline}
+                    />
+                    <PreviewField
+                      label="Preferred Contact Method"
+                      value={contact.preferred_contact_method}
+                    />
+                    <PreviewField label="Remarks" value={contact.remarks} />
+                  </PreviewGrid>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Eligibility and Courses"
+        description="Academic eligibility and selection criteria."
+      >
+        <PreviewGrid>
+          <PreviewField
+            label="Eligible Batch"
+            value={record.eligibility.eligible_batch}
+          />
+          <PreviewField
+            label="Programme"
+            value={getProgrammeLabel(record.eligibility.eligible_programme)}
+          />
+          <PreviewField
+            label="Degree"
+            value={getDegreeLabels(record.eligibility.eligible_degree_ids)}
+          />
+          <PreviewField
+            label="Branches"
+            value={getBranchLabels(
+              record.eligibility.eligible_branch_ids,
+              record.eligibility.eligible_programme,
+              record.eligibility.eligible_degree_ids
+            )}
+          />
+          <PreviewField
+            label="Minimum CGPA"
+            value={record.eligibility.minimum_cgpa}
+          />
+          <PreviewField
+            label="Minimum Class 10 Percentage"
+            value={record.eligibility.high_school_percentage_criterion}
+          />
+          <PreviewField
+            label="Minimum Class 12 Percentage"
+            value={record.eligibility.minimum_class_12_percentage}
+          />
+          <PreviewField
+            label="Active Backlogs Allowed"
+            value={record.eligibility.backlogs_allowed}
+          />
+          {record.eligibility.backlogs_allowed ? (
+            <PreviewField
+              label="Maximum Total Backlogs"
+              value={record.eligibility.max_backlogs}
+            />
+          ) : null}
+          <PreviewField
+            label="Gap Year Allowed"
+            value={record.eligibility.gap_year_allowed}
+          />
+          <PreviewField
+            label="History of Arrears Allowed"
+            value={record.eligibility.history_of_arrears_allowed}
+          />
+          <PreviewField
+            label="Eligibility Notes"
+            value={record.eligibility.other_specific_requirements}
+          />
+        </PreviewGrid>
+      </SectionCard>
+
+      <SectionCard
+        title="Salary Details"
+        description="Compensation structure for all eligible candidates."
+      >
+        <PreviewGrid>
+          <PreviewField label="Currency" value={record.salary_details.currency} />
+          <PreviewField
+            label="Salary Structure"
+            value="Same for all eligible candidates"
+          />
+          <PreviewField
+            label="Benefits and Perks"
+            value={record.salary_details.benefits_and_perks}
+          />
+        </PreviewGrid>
+
+        {record.salary_details.salary_rows.length === 0 ? (
+          <Typography variant="body2" sx={{ color: "text.secondary", mt: 2.5 }}>
+            No salary details added yet.
+          </Typography>
+        ) : (
+          <Stack spacing={2} sx={{ mt: 2.5 }}>
+            {record.salary_details.salary_rows.map((row, index) => (
+              <Box
+                key={row.id || index}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Common Salary Structure
+                  </Typography>
+
+                  <PreviewGrid>
+                    <PreviewField
+                      label="Applicable Candidates"
+                      value={formatCourseApplicability(row.programme_id)}
+                    />
+                    <PreviewField
+                      label="CTC"
+                      value={formatMoney(row.ctc, record.salary_details.currency)}
+                    />
+                    <PreviewField
+                      label="Gross Salary"
+                      value={formatMoney(
+                        row.gross_salary,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="Base Salary"
+                      value={formatMoney(
+                        row.base_salary,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="Variable Pay"
+                      value={formatMoney(
+                        row.variable_pay,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="Joining Bonus"
+                      value={formatMoney(
+                        row.joining_bonus,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="Retention Bonus"
+                      value={formatMoney(
+                        row.retention_bonus,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="Performance Bonus"
+                      value={formatMoney(
+                        row.performance_bonus,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="ESOPs"
+                      value={formatMoney(row.esops, record.salary_details.currency)}
+                    />
+                    <PreviewField
+                      label="Stipend"
+                      value={formatMoney(row.stipend, record.salary_details.currency)}
+                    />
+                    <PreviewField
+                      label="Bond Amount"
+                      value={formatMoney(
+                        row.bond_amount,
+                        record.salary_details.currency
+                      )}
+                    />
+                    <PreviewField
+                      label="Deductions or Notes"
+                      value={row.deductions_or_notes}
+                    />
+                  </PreviewGrid>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Selection Process"
+        description="Round-wise recruitment flow."
+      >
+        {record.selection_process.rounds.length === 0 ? (
+          <Typography variant="body2" sx={{ color: "text.secondary" }}>
+            No selection rounds added yet.
+          </Typography>
+        ) : (
+          <Stack spacing={2}>
+            {record.selection_process.rounds.map((round, index) => (
+              <Box
+                key={round.id || index}
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Stack spacing={1.5}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                    Round {index + 1}
+                  </Typography>
+
+                  <PreviewGrid>
+                    <PreviewField label="Round Order" value={round.round_order} />
+                    <PreviewField
+                      label="Hiring Stage"
+                      value={round.round_name}
+                    />
+                    <PreviewField label="Mode" value={round.selection_mode} />
+                    <PreviewField
+                      label="Date & Time"
+                      value={formatRoundSchedule(round.scheduled_at)}
+                    />
+                    <PreviewField
+                      label="Duration (minutes)"
+                      value={round.duration_minutes}
+                    />
+                  </PreviewGrid>
+                </Stack>
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </SectionCard>
+
+      <SectionCard
+        title="Declaration"
+        description="Authorised signatory and recruiter confirmations."
+      >
+        <PreviewGrid>
+          <PreviewField
+            label="Authorised Signatory Name"
+            value={record.declaration.authorised_signatory_name}
+          />
+          <PreviewField
+            label="Authorised Signatory Designation"
+            value={record.declaration.authorised_signatory_designation}
+          />
+          <PreviewField
+            label="Authorised Signatory Email"
+            value={record.declaration.authorised_signatory_email}
+          />
+          <PreviewField
+            label="Authorised Signatory Phone"
+            value={record.declaration.authorised_signatory_phone}
+          />
+          <PreviewField
+            label="Declaration Place"
+            value={record.declaration.declaration_place}
+          />
+          <PreviewField
+            label="Declaration Date"
+            value={formatDateOnly(record.declaration.declaration_date)}
+          />
+          <PreviewField
+            label="Information Confirmed"
+            value={record.declaration.information_confirmed}
+          />
+          <PreviewField
+            label="Authorization Confirmed"
+            value={record.declaration.authorization_confirmed}
+          />
+          <PreviewField
+            label="Policy Consent Confirmed"
+            value={record.declaration.policy_consent_confirmed}
+          />
+          <PreviewField
+            label="Typed Signature"
+            value={record.declaration.typed_signature}
+          />
+        </PreviewGrid>
+      </SectionCard>
+    </Stack>
+  );
+}

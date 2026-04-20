@@ -70,14 +70,6 @@ Replace a scattered/manual JNF submission workflow with a structured web portal 
 - View JNF history and status
 - Upload company logo and JD PDF
 
-### Admin
-
-- Login securely
-- View all recruiter JNFs
-- Review and approve/reject/request changes
-- Change recruiter account status
-- View dashboard metrics
-- Access reports and exports
 
 ## JNF data requirements
 
