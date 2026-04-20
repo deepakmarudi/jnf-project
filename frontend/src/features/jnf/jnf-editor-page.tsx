@@ -11,6 +11,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import PageContainer from "@/components/layout/page-container";
 import ErrorState from "@/components/ui/error-state";
 import LoadingState from "@/components/ui/loading-state";
+import Paper from "@mui/material/Paper";
 import useRecruiterSession from "@/features/auth/hooks/use-recruiter-session";
 import { getMyCompanyProfile } from "@/features/company/lib/company-api";
 import type { CompanyProfile } from "@/features/company/types";
@@ -296,6 +297,55 @@ export default function JnfEditorPage({
       }
     >
       <Stack spacing={3}>
+        {form.status === "changes_requested" && form.admin_feedback ? (
+          <Paper 
+            variant="outlined" 
+            sx={{ 
+              p: 3, 
+              borderRadius: 3, 
+              border: "1px solid",
+              borderColor: "primary.light",
+              backgroundColor: "rgba(0, 51, 102, 0.02)",
+              position: "relative",
+              overflow: "hidden"
+            }}
+          >
+            <Box 
+              sx={{ 
+                position: "absolute", 
+                left: 0, 
+                top: 0, 
+                bottom: 0, 
+                width: 6, 
+                backgroundColor: "primary.main" 
+              }} 
+            />
+            <Stack spacing={1.5}>
+              <Stack direction="row" alignItems="center" spacing={1}>
+                {/* Simple envelope-like icon or just text */}
+                <Typography 
+                  variant="subtitle1" 
+                  fontWeight={700} 
+                  sx={{ color: "primary.main", display: "flex", alignItems: "center", gap: 1 }}
+                >
+                  Message from Admin
+                </Typography>
+              </Stack>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  color: "text.primary", 
+                  lineHeight: 1.6,
+                  fontStyle: "italic",
+                  pl: 0.5 
+                }}
+              >
+                &quot;{form.admin_feedback}&quot;
+              </Typography>
+            </Stack>
+          </Paper>
+        ) : null}
+
         {infoMessage ? <Alert severity="info">{infoMessage}</Alert> : null}
 
         {missingRequiredFields.length > 0 ? (

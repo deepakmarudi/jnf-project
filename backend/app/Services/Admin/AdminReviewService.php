@@ -46,7 +46,11 @@ class AdminReviewService
 
         return [
             'filters' => $filters,
-            'jnfs' => $query->orderByDesc('submitted_at')->get()->toArray(),
+            'jnfs' => $query->orderByDesc('submitted_at')->get()->map(function($jnf) {
+                $arr = $jnf->toArray();
+                $arr['admin_feedback'] = $jnf->review_notes;
+                return $arr;
+            })->toArray(),
         ];
     }
 
@@ -111,6 +115,8 @@ class AdminReviewService
             }, $record['selection_rounds'] ?? []),
         ];
 
+        $record['admin_feedback'] = $jnf->review_notes;
+
         return ['jnf' => $record];
     }
 
@@ -168,9 +174,13 @@ class AdminReviewService
             );
         }
 
+        // Consolidate feedback from possible multiple keys
+        $notes = $payload['notes'] ?? $payload['review_notes'] ?? $payload['remarks'] ?? null;
+
         $jnf->update([
             'status' => $newStatus,
-            'review_notes' => $payload['notes'] ?? null,
+            'review_notes' => $notes,
+            'admin_feedback' => $notes, // Populate both for consistency
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);

@@ -57,7 +57,11 @@ class JnfService
 
         return [
             'filters' => $filters,
-            'jnfs' => $query->orderByDesc('updated_at')->get()->toArray(),
+            'jnfs' => $query->orderByDesc('updated_at')->get()->map(function($jnf) {
+                $arr = $jnf->toArray();
+                $arr['admin_feedback'] = $jnf->review_notes;
+                return $arr;
+            })->toArray(),
         ];
     }
 
@@ -159,6 +163,7 @@ class JnfService
         ];
         
         $record['required_skills'] = array_column($record['skills'] ?? [], 'name');
+        $record['admin_feedback'] = $jnf->review_notes;
 
         return ['jnf' => $record];
     }
@@ -216,7 +221,9 @@ class JnfService
                 $coreFields['selection_process'], 
                 $coreFields['additional_details'],
                 $coreFields['declaration'],
-                $coreFields['required_skills']
+                $coreFields['required_skills'],
+                $coreFields['review_notes'],
+                $coreFields['admin_feedback']
             );
             \Illuminate\Support\Facades\Log::info("Arrays in coreFields: ", array_keys(array_filter($coreFields, "is_array")));
             $jnf->update($coreFields);

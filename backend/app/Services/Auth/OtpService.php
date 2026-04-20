@@ -4,6 +4,8 @@ namespace App\Services\Auth;
 
 use App\Models\RecruiterOtp;
 use App\Exceptions\Api\ApiException;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Auth\RecruiterOtpMail;
 
 class OtpService
 {
@@ -35,8 +37,8 @@ class OtpService
             'expires_at' => now()->addMinutes(10),
         ]);
 
-        // 5. In production → send email here
-        \Illuminate\Support\Facades\Log::info("DEVELOPMENT OTP for {$email} is: {$otpCode}");
+        // 5. Send email
+        Mail::to($email)->send(new RecruiterOtpMail($otpCode));
 
         return [
             'recruiter_email' => $email,

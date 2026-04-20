@@ -16,6 +16,7 @@ class ReviewActionRequest extends FormRequest
         return [
             'review_notes' => ['nullable', 'string'],
             'remarks' => ['nullable', 'string'],
+            'notes' => ['nullable', 'string'],
         ];
     }
 }
